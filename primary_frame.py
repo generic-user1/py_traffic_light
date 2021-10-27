@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 
-from tkinter import Frame
+from tkinter import Canvas, Frame
 
 from traffic_light import TrafficLight
+from road import Road
 
 #The primary frame for the application
 class PrimaryFrame(Frame):
 
     #default minimum width and height of the Primary Frame
-    FRAME_SIZE = 600
+    FRAME_SIZE = 400
 
     #define the names of the traffic lights
     #as well as their ordering when selecting them
@@ -36,9 +37,12 @@ class PrimaryFrame(Frame):
     def _makeChangesToParent(self):
 
         #configure row and column minimum size in parent window
-        self.parentWindow.rowconfigure(index=0, minsize=PrimaryFrame.FRAME_SIZE)
-        self.parentWindow.columnconfigure(index=0, minsize=PrimaryFrame.FRAME_SIZE)
-        
+        self.parentWindow.rowconfigure(index=0, weight=1, minsize=PrimaryFrame.FRAME_SIZE)
+        self.parentWindow.columnconfigure(index=0, weight=1, minsize=PrimaryFrame.FRAME_SIZE)
+
+        #set minimum size of window
+        self.parentWindow.minsize(width=PrimaryFrame.FRAME_SIZE, height=PrimaryFrame.FRAME_SIZE)
+
         #put frame into parent window
         self.grid(row=0, column=0, padx=25, pady=25, sticky="NESW")
         
@@ -62,9 +66,17 @@ class PrimaryFrame(Frame):
     
 
     #internal method used to
-    #set up the traffic light widgets on the page
-    def _placeTrafficLights(self):
-        from traffic_light import TrafficLight
+    #set up the widgets on the page
+    #including traffic lights and roads
+    def _placeWidgets(self):
+
+        #create and position road widgets
+        vertRoad = Road(self)
+        vertRoad.grid(row=0, column=1, sticky="NS", rowspan=3)
+
+        horizRoad = Road(self, True)
+        horizRoad.grid(row=1, column=0, sticky="EW", columnspan=3)
+
 
         #create and position each light
         for tlightName in PrimaryFrame.TLIGHT_NAMES:
@@ -81,7 +93,9 @@ class PrimaryFrame(Frame):
             #save the light by name in the self.trafficLights dictionary
             #this allows it to be accessed later
             self.trafficLights[tlightName] = trafficLight
-
+        
+       
+        
             
 
     #init requires parent window as first parameter
@@ -89,7 +103,6 @@ class PrimaryFrame(Frame):
     #will be affected; if true, they are left alone
     def __init__(self, parentWindow, noGridChange = False):
         from typing import Dict
-        from traffic_light import TrafficLight
 
         #run superclass constructor
         Frame.__init__(self, 
@@ -112,7 +125,7 @@ class PrimaryFrame(Frame):
         #init traffic lights dictionary (with type hint)
         self.trafficLights : Dict[str, TrafficLight] = {}
         #setup traffic lights
-        self._placeTrafficLights()
+        self._placeWidgets()
 
         #initialize selected light name with the first 
         #this can be used to interact with the lights sequentially

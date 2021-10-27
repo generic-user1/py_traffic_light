@@ -12,12 +12,11 @@ def main():
     from tkinter import Tk
     from primary_frame import PrimaryFrame
 
-    #Create main window, set title, and force static size
+    #Create main window and set title
     mainWindow = Tk()
     mainWindow.title("Traffic Light Simulator")
-    mainWindow.resizable(False, False)
-    
-    #Create main content frame with padding and border
+
+    #Create main content frame
     contentFrame = PrimaryFrame(mainWindow)
 
     def testFunc():
@@ -27,6 +26,8 @@ def main():
     
     changeButton = tkinter.Button(contentFrame, command=testFunc)
     changeButton.grid(row=1, column=1)
+
+    mainWindow.geometry("400x400")
 
     #Run main loop of window (listens for events and blocks until window is closed)
     mainWindow.mainloop()
