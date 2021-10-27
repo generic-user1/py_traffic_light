@@ -169,7 +169,7 @@ class TrafficLight(Canvas):
         self.setActiveLamp(nextLamp)
        
 
- #end TrafficLight 
+#end TrafficLight 
 
 if __name__ == "__main__":
     print("This is a class definition used as part of a larger script")
