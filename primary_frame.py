@@ -7,6 +7,9 @@ from traffic_light import TrafficLight
 #The primary frame for the application
 class PrimaryFrame(Frame):
 
+    #default minimum width and height of the Primary Frame
+    FRAME_SIZE = 600
+
     #define the names of the traffic lights
     #as well as their ordering when selecting them
     #sequentially
@@ -27,12 +30,24 @@ class PrimaryFrame(Frame):
         }
 
 
+    #some of the initialization includes making changes to the parent
+    #including setting a grid layout and setting the minimum row and column size
+    #these changes are all included here, so that they can be easily skipped if desired
+    def _makeChangesToParent(self):
+
+        #configure row and column minimum size in parent window
+        self.parentWindow.rowconfigure(index=0, minsize=PrimaryFrame.FRAME_SIZE)
+        self.parentWindow.columnconfigure(index=0, minsize=PrimaryFrame.FRAME_SIZE)
+        
+        #put frame into parent window
+        self.grid(row=0, column=0, padx=25, pady=25, sticky="NESW")
+        
+
     #internal method used to
     #set up attributes for PrimaryFrame
     def _setFrameAttributes(self):
-        #pack frame into parent window
-        self.pack(padx=25, pady=25)
         
+
         #set border attributes
         self.configure(borderwidth=2, relief="solid")
 
@@ -69,19 +84,30 @@ class PrimaryFrame(Frame):
 
             
 
-
-    def __init__(self, parentWindow):
+    #init requires parent window as first parameter
+    #noGridChange controls whether the parent window's row/column configs
+    #will be affected; if true, they are left alone
+    def __init__(self, parentWindow, noGridChange = False):
         from typing import Dict
         from traffic_light import TrafficLight
 
         #run superclass constructor
-        Frame.__init__(self, parentWindow)
+        Frame.__init__(self, 
+            parentWindow, 
+            width=PrimaryFrame.FRAME_SIZE, 
+            height=PrimaryFrame.FRAME_SIZE
+            )
         
         #save parent
         self.parentWindow = parentWindow
         
         #setup frame attributes
         self._setFrameAttributes()
+
+        #do initialization requiring changes to parent window
+        #unless noGridChange is set to True
+        if not noGridChange:
+            self._makeChangesToParent()
 
         #init traffic lights dictionary (with type hint)
         self.trafficLights : Dict[str, TrafficLight] = {}
