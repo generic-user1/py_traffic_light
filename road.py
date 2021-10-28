@@ -6,7 +6,8 @@ from tkinter import Canvas
 #Scales dynamically,
 class Road(Canvas): 
 
-    ROAD_COLOR = "#373b42"
+    #define colors for elements of the road
+    ROAD_COLOR = "#373B42"
     LINE_COLOR = "#FFFF00"
 
     #internal method
@@ -16,6 +17,7 @@ class Road(Canvas):
         allObjects = self.find_all()
         for object in allObjects:
             self.delete(object)
+
 
     #draws the traffic lines down the middle of the widget
     #normally clears the canvas before doing this,
@@ -33,8 +35,8 @@ class Road(Canvas):
             currentHeight = self.currentHeight
         else:
             #if this road is to be drawn horizontally,
-            #swap width and height
-            #this is somewhat messy but works for this case
+            #swap width and height; this effectively swaps
+            #the axis that calculations are based on
             currentHeight = self.currentWidth
             currentWidth = self.currentHeight
 
@@ -84,11 +86,11 @@ class Road(Canvas):
 
             #draw the line using the calculated offset
             if not self.horizontal:
-                self.create_rectangle(xOffset, yOffset, xOffset+lineWidth, yOffset+lineHeight, fill=Road.LINE_COLOR)
+                self.create_rectangle(xOffset, yOffset, xOffset+lineWidth, yOffset+lineHeight, fill=self.LINE_COLOR)
             else:
             #draw lines horizontally if needed
             #this is done by switching around which parameter goes where
-                self.create_rectangle(yOffset, xOffset, yOffset+lineHeight, xOffset+lineWidth, fill=Road.LINE_COLOR)
+                self.create_rectangle(yOffset, xOffset, yOffset+lineHeight, xOffset+lineWidth, fill=self.LINE_COLOR)
 
         return True
 
@@ -109,11 +111,11 @@ class Road(Canvas):
         from tkinter.constants import FLAT
 
         #run superclass constructor
-        Canvas.__init__(self, 
+        super().__init__(
             parent, #set parent object
             width=100, #set default width and height
             height=100, 
-            bg=Road.ROAD_COLOR, #set background color
+            bg=self.ROAD_COLOR, #set background color
             highlightthickness=0 #remove border that is applied by default to canvas widgets
             )
         
@@ -132,6 +134,7 @@ class Road(Canvas):
         #bind the _onResize method to the <Configure> event
         self.bind("<Configure>", self._onResize)
 
+#end Road
 
 
 

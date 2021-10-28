@@ -1,9 +1,6 @@
 #!/usr/bin/env python3
 
-from tkinter import Canvas, Frame
-
-from traffic_light import TrafficLight
-from road import Road
+from tkinter import Frame
 
 #The primary frame for the application
 class PrimaryFrame(Frame):
@@ -37,11 +34,11 @@ class PrimaryFrame(Frame):
     def _makeChangesToParent(self):
 
         #configure row and column minimum size in parent window
-        self.parentWindow.rowconfigure(index=0, weight=1, minsize=PrimaryFrame.FRAME_SIZE)
-        self.parentWindow.columnconfigure(index=0, weight=1, minsize=PrimaryFrame.FRAME_SIZE)
+        self.parentWindow.rowconfigure(index=0, weight=1, minsize=self.FRAME_SIZE)
+        self.parentWindow.columnconfigure(index=0, weight=1, minsize=self.FRAME_SIZE)
 
         #set minimum size of window
-        self.parentWindow.minsize(width=PrimaryFrame.FRAME_SIZE, height=PrimaryFrame.FRAME_SIZE)
+        self.parentWindow.minsize(width=self.FRAME_SIZE, height=self.FRAME_SIZE)
 
         #put frame into parent window
         self.grid(row=0, column=0, padx=25, pady=25, sticky="NESW")
@@ -69,6 +66,8 @@ class PrimaryFrame(Frame):
     #set up the widgets on the page
     #including traffic lights and roads
     def _placeWidgets(self):
+        from road import Road
+        from traffic_light import TrafficLight
 
         #create and position road widgets
         vertRoad = Road(self)
@@ -79,7 +78,7 @@ class PrimaryFrame(Frame):
 
 
         #create and position each light
-        for tlightName in PrimaryFrame.TLIGHT_NAMES:
+        for tlightName in self.TLIGHT_NAMES:
             
             #create the light
             trafficLight = TrafficLight(self)
@@ -103,12 +102,13 @@ class PrimaryFrame(Frame):
     #will be affected; if true, they are left alone
     def __init__(self, parentWindow, noGridChange = False):
         from typing import Dict
+        from traffic_light import TrafficLight
 
         #run superclass constructor
-        Frame.__init__(self, 
+        super().__init__(
             parentWindow, 
-            width=PrimaryFrame.FRAME_SIZE, 
-            height=PrimaryFrame.FRAME_SIZE
+            width=self.FRAME_SIZE, 
+            height=self.FRAME_SIZE
             )
         
         #save parent
@@ -130,7 +130,7 @@ class PrimaryFrame(Frame):
         #initialize selected light name with the first 
         #this can be used to interact with the lights sequentially
         #using the getSelectedLight and incrementSelectedLight methods
-        self.selectedLightName = PrimaryFrame.TLIGHT_NAMES[0]
+        self.selectedLightName = self.TLIGHT_NAMES[0]
 
 
     #returns the currently selected light name
@@ -140,27 +140,29 @@ class PrimaryFrame(Frame):
     #increments the currently selected light name
     def incrementSelectedLightName(self):
         #get the index of the currently selected light naame
-        selectedLightIndex = PrimaryFrame.TLIGHT_NAMES.index(self.selectedLightName)
+        selectedLightIndex = self.TLIGHT_NAMES.index(self.selectedLightName)
 
         #get the index of the next light by adding 1
         nextIndex = selectedLightIndex + 1
 
         #if the selected light name is not the last one in the list,
         #set the new selected light name to the next name in the list
-        if nextIndex < len(PrimaryFrame.TLIGHT_NAMES):
-            self.selectedLightName = PrimaryFrame.TLIGHT_NAMES[nextIndex]
+        if nextIndex < len(self.TLIGHT_NAMES):
+            self.selectedLightName = self.TLIGHT_NAMES[nextIndex]
 
         #if the selected light name is the last one in the list,
         #set the new selected light name to the first one in the list
         else:
-            self.selectedLightName = PrimaryFrame.TLIGHT_NAMES[0]
+            self.selectedLightName = self.TLIGHT_NAMES[0]
 
     
     #similar to getSelectedLightName but returns the actual
     #TrafficLight instance instead
-    def getSelectedLight(self) -> TrafficLight:
+    def getSelectedLight(self):
+        from traffic_light import TrafficLight
         selectedName = self.getSelectedLightName()
-        return self.trafficLights[selectedName]
+        selectedLight : TrafficLight = self.trafficLights[selectedName]
+        return selectedLight
 
     #alias for incrementSelectedLightName
     #to better match the form of getSelectedLight
