@@ -68,6 +68,7 @@ class PrimaryFrame(Frame):
     def _placeWidgets(self):
         from road import Road
         from traffic_light import TrafficLight
+        from road_intersection import RoadIntersection
 
         #create and position road widgets
         vertRoad = Road(self)
@@ -76,6 +77,8 @@ class PrimaryFrame(Frame):
         horizRoad = Road(self, True)
         horizRoad.grid(row=1, column=0, sticky="EW", columnspan=3)
 
+        vertIntersection = RoadIntersection(self)
+        vertIntersection.grid(row=1, column=1)
 
         #create and position each light
         for tlightName in self.TLIGHT_NAMES:
