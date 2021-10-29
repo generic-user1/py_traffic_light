@@ -11,10 +11,6 @@ class RoadIntersection(Road):
     #intersection border lines
     LINE_COLOR = "#FFFFFF"
 
-    #override constructor to remove the horizontal option
-    def __init__(self, parent):
-        super().__init__(parent)
-
     #override drawRoad method to draw an intersection
     #rather than a normal road segment
     def drawRoad(self, doNotClear=False):
@@ -23,8 +19,13 @@ class RoadIntersection(Road):
             self._clearCanvas()
 
         #alias width and height
-        currentWidth = self.currentWidth
-        currentHeight = self.currentHeight
+        if not self.horizontal:
+            currentWidth = self.currentWidth
+            currentHeight = self.currentHeight
+        #swap axes if drawing horizontally
+        else:
+            currentWidth = self.currentHeight
+            currentHeight = self.currentWidth
 
         #determine the size of one line
         #the height is the closest integer approximation of
@@ -36,27 +37,45 @@ class RoadIntersection(Road):
         
         #calculate offsets for the bottom line
         #the top line doesn't need any offsets
-        lineXOffset = currentWidth - lineWidth
-        lineYOffset = currentHeight - lineHeight
+        lineXOffset = (currentWidth - 1) - lineWidth
+        lineYOffset = (currentHeight - 1) - lineHeight
 
+        #draw lines
+        if not self.horizontal:
+            self.create_rectangle(
+                0, 
+                0, 
+                lineWidth, 
+                lineHeight, 
+                fill=self.LINE_COLOR
+                )
 
-        self.create_rectangle(
-            0, 
-            0, 
-            lineWidth, 
-            lineHeight, 
-            fill=self.LINE_COLOR,
-            outline=self.LINE_COLOR
-            )
+            self.create_rectangle(
+                lineXOffset, 
+                lineYOffset, 
+                currentWidth - 1, 
+                currentHeight - 1, 
+                fill=self.LINE_COLOR
+                )
+                
+        #if set to draw horizontal, draw with rotated coordinates
+        else:
+            self.create_rectangle(
+                0, 
+                lineXOffset, 
+                lineHeight, 
+                currentWidth - 1,
+                fill=self.LINE_COLOR
+                )
 
-        self.create_rectangle(
-            lineXOffset, 
-            lineYOffset, 
-            currentWidth, 
-            currentHeight, 
-            fill=self.LINE_COLOR,
-            outline=self.LINE_COLOR
-            )
+            self.create_rectangle(
+                lineYOffset,
+                0,
+                currentHeight - 1,
+                lineWidth,
+                fill=self.LINE_COLOR
+                )
+
         
 
 #end RoadIntersection
