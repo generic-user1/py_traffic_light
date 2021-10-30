@@ -77,11 +77,8 @@ class PrimaryFrame(Frame):
         horizRoad = Road(self, True)
         horizRoad.grid(row=1, column=0, sticky="EW", columnspan=3)
 
-        vertIntersection = RoadIntersection(self)
-        vertIntersection.grid(row=1, column=1, sticky="NS")
-
-        horizIntersection = RoadIntersection(self, True)
-        horizIntersection.grid(row=1, column=1, sticky="EW")
+        intersection = RoadIntersection(self)
+        intersection.grid(row=1, column=1)
 
         #create and position each light
         for tlightName in self.TLIGHT_NAMES:
