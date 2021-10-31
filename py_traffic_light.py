@@ -25,9 +25,7 @@ def main():
         contentFrame.incrementSelectedLight()
     
     changeButton = tkinter.Button(contentFrame, command=testFunc)
-    changeButton.grid(row=1, column=1)
-
-    mainWindow.geometry("400x400")
+    changeButton.grid(row=2, column=2)
 
     #Run main loop of window (listens for events and blocks until window is closed)
     mainWindow.mainloop()

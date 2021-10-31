@@ -6,7 +6,7 @@ from tkinter import Frame
 class PrimaryFrame(Frame):
 
     #default minimum width and height of the Primary Frame
-    FRAME_SIZE = 400
+    FRAME_SIZE = 600
 
     #define the names of the traffic lights
     #as well as their ordering when selecting them
@@ -21,10 +21,10 @@ class PrimaryFrame(Frame):
     #define the coordinates of each traffic light
     #as 2-tuples (row, column)
     TLIGHT_COORDINATES = {
-        "north" : (0, 1),
-        "south" : (2, 1),
-        "east"  : (1, 2),
-        "west"  : (1, 0)
+        "north" : (1, 2),
+        "south" : (3, 2),
+        "east"  : (2, 3),
+        "west"  : (2, 1)
         }
 
 
@@ -56,7 +56,7 @@ class PrimaryFrame(Frame):
         self.configure(background="#FFFFFF")
         
         #setup grid structure
-        for x in range(3):
+        for x in range(5):
             self.rowconfigure(index=x, weight=1, minsize=100)
             self.columnconfigure(index=x, weight=1, minsize=100)
     
@@ -72,13 +72,13 @@ class PrimaryFrame(Frame):
 
         #create and position road widgets
         vertRoad = Road(self)
-        vertRoad.grid(row=0, column=1, sticky="NS", rowspan=3)
+        vertRoad.grid(row=0, column=2, sticky="NS", rowspan=5)
 
         horizRoad = Road(self, True)
-        horizRoad.grid(row=1, column=0, sticky="EW", columnspan=3)
+        horizRoad.grid(row=2, column=0, sticky="EW", columnspan=5)
 
         intersection = RoadIntersection(self)
-        intersection.grid(row=1, column=1)
+        intersection.grid(row=2, column=2)
 
         #create and position each light
         for tlightName in self.TLIGHT_NAMES:
