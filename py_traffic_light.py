@@ -23,7 +23,10 @@ def main():
         light = contentFrame.getSelectedLight()
         light.incrementState()
         contentFrame.incrementSelectedLight()
-        print(contentFrame.horizRoad.getCorners())
+
+        roadTL, roadBR = contentFrame.vertRoad.getCorners()
+        print(roadTL)
+        contentFrame.vehicle.place(x=roadTL[0], y=roadTL[1])
     
     changeButton = tkinter.Button(contentFrame, command=testFunc)
     changeButton.grid(row=2, column=2)

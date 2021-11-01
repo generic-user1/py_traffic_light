@@ -141,8 +141,8 @@ class Road(Canvas):
         
         #get the top left corner
         cornerTL = (
-            targetWidget.winfo_rootx(),
-            targetWidget.winfo_rooty()
+            targetWidget.winfo_x(),
+            targetWidget.winfo_y()
         ) 
 
         #get the width and height of the widget
