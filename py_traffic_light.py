@@ -23,6 +23,7 @@ def main():
         light = contentFrame.getSelectedLight()
         light.incrementState()
         contentFrame.incrementSelectedLight()
+        print(contentFrame.horizRoad.getCorners())
     
     changeButton = tkinter.Button(contentFrame, command=testFunc)
     changeButton.grid(row=2, column=2)

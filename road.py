@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from tkinter import Canvas
+from tkinter import Canvas, Widget
 
 #A road widget drawn using the tkinter Canvas system
 #Scales dynamically,
@@ -133,6 +133,36 @@ class Road(Canvas):
         
         #bind the _onResize method to the <Configure> event
         self.bind("<Configure>", self._onResize)
+
+    #return the x and y coordinates of the top left
+    #and bottom right corners of the specified widget 
+    @staticmethod
+    def getCornersOfWidget(targetWidget: Widget):
+        
+        #get the top left corner
+        cornerTL = (
+            targetWidget.winfo_rootx(),
+            targetWidget.winfo_rooty()
+        ) 
+
+        #get the width and height of the widget
+        widgetWidth = targetWidget.winfo_width()
+        widgetHeight = targetWidget.winfo_height()
+        
+        #calculate the bottom right corner given the
+        #widget's height and width
+        cornerBR = (
+            cornerTL[0] + widgetWidth,
+            cornerTL[1] + widgetHeight
+        )
+
+        return (cornerTL, cornerBR)
+
+    #return the x and y coordinates of the top left
+    #and bottom right corners of this widget
+    def getCorners(self):
+        return self.getCornersOfWidget(self)
+
 
 #end Road
 

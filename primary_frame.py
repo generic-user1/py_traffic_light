@@ -59,8 +59,6 @@ class PrimaryFrame(Frame):
         for x in range(5):
             self.rowconfigure(index=x, weight=1, minsize=100)
             self.columnconfigure(index=x, weight=1, minsize=100)
-    
-    
 
     #internal method used to
     #set up the widgets on the page
@@ -69,16 +67,21 @@ class PrimaryFrame(Frame):
         from road import Road
         from traffic_light import TrafficLight
         from road_intersection import RoadIntersection
+        from vehicle import Vehicle
 
         #create and position road widgets
-        vertRoad = Road(self)
-        vertRoad.grid(row=0, column=2, sticky="NS", rowspan=5)
+        self.vertRoad = Road(self)
+        self.vertRoad.grid(row=0, column=2, sticky="NS", rowspan=5)
 
-        horizRoad = Road(self, True)
-        horizRoad.grid(row=2, column=0, sticky="EW", columnspan=5)
+        self.horizRoad = Road(self, True)
+        self.horizRoad.grid(row=2, column=0, sticky="EW", columnspan=5)
 
-        intersection = RoadIntersection(self)
-        intersection.grid(row=2, column=2)
+        self.intersection = RoadIntersection(self)
+        self.intersection.grid(row=2, column=2)
+
+        #place vehicle
+        self.vehicle = Vehicle(self)
+        self.vehicle.place(x=0, y=0)
 
         #create and position each light
         for tlightName in self.TLIGHT_NAMES:
@@ -105,7 +108,10 @@ class PrimaryFrame(Frame):
     #will be affected; if true, they are left alone
     def __init__(self, parentWindow, noGridChange = False):
         from typing import Dict
+        from road import Road
         from traffic_light import TrafficLight
+        from road_intersection import RoadIntersection
+        from vehicle import Vehicle
 
         #run superclass constructor
         super().__init__(
@@ -125,9 +131,20 @@ class PrimaryFrame(Frame):
         if not noGridChange:
             self._makeChangesToParent()
 
+        #create vars for storing roads
+        #roads are created within _placeWidgets
+        self.horizRoad : Road = None
+        self.vertRoad : Road = None
+        self.intersection : RoadIntersection = None
+
+        #create var for storing vehicle
+        #vehicle is created within _placeWidgets
+        self.vehicle : Vehicle = None
+
         #init traffic lights dictionary (with type hint)
         self.trafficLights : Dict[str, TrafficLight] = {}
-        #setup traffic lights
+        
+        #instantiate and position widgets (roads, traffic lights; etc)
         self._placeWidgets()
 
         #initialize selected light name with the first 
