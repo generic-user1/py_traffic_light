@@ -2,13 +2,16 @@
 
 from typing import Tuple
 from tkinter import Widget
+from tkinter import Misc as BaseWidget 
+#I import tkinter.Misc as BaseWidget to be more representative of what it is;
+#This is a personal preference and is by no means required
 
 #Position Reporter
 #An "interface" for widgets to report their current position
 #I say "interface" but the definition is concrete; I simply intend for
 #this class to be used in addition to a more useful base class
 
-class PositionReporter():
+class PositionReporter(BaseWidget):
 
     #return coordinates within parent
     #as a 2-tuple (x, y)

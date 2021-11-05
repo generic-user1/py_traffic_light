@@ -30,6 +30,7 @@ def main():
         def driveToBottom():
             x, y = [pos - vSize for pos in roadBR]
             def cbTest():
+                print("collision results:", contentFrame.vehicle.getCollidingObjects())
                 print("Callback Success!")
             contentFrame.vehicle.driveToPos(x, y, cbTest)
         contentFrame.after(10, driveToBottom)
