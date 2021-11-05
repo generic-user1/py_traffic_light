@@ -2,11 +2,11 @@
 
 from tkinter import Canvas
 
-from position_reporter import PositionReporter
+from collider import Collider
 
 #A road widget drawn using the tkinter Canvas system
 #Scales dynamically,
-class Road(Canvas, PositionReporter): 
+class Road(Canvas, Collider): 
 
     #define colors for elements of the road
     ROAD_COLOR = "#373B42"

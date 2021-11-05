@@ -3,7 +3,7 @@
 from typing import Tuple
 from tkinter import Widget
 
-#position reporter
+#Position Reporter
 #An "interface" for widgets to report their current position
 #I say "interface" but the definition is concrete; I simply intend for
 #this class to be used in addition to a more useful base class

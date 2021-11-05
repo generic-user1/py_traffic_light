@@ -2,13 +2,13 @@
 
 from tkinter import Canvas
 from typing import Callable
+from collider import Collider
 
-from position_reporter import PositionReporter
 
 #a widget to represent a vehicle; can "drive"
 #across a Frame
 
-class Vehicle(Canvas, PositionReporter):
+class Vehicle(Canvas, Collider):
 
     DEFAULT_COLOR = "#FF0000"
 
