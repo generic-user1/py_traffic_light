@@ -140,7 +140,13 @@ class Road(Canvas):
         cornerTL = (
             targetWidget.winfo_x(),
             targetWidget.winfo_y()
-        ) 
+        )
+
+        #adjust top left corner by parent's border width
+        #as border width seems to offset the return value of winfo_x/y
+        parentBorderWidth = targetWidget.master.cget("borderwidth")
+        cornerTL = tuple([x - parentBorderWidth for x in cornerTL])
+         
 
         #get the width and height of the widget
         widgetWidth = targetWidget.winfo_width()
