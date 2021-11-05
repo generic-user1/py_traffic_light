@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 
 from tkinter import Canvas
-from typing import Callable, Tuple
+from typing import Callable
+
+from position_reporter import PositionReporter
 
 #a widget to represent a vehicle; can "drive"
 #across a Frame
 
-class Vehicle(Canvas):
+class Vehicle(Canvas, PositionReporter):
 
     DEFAULT_COLOR = "#FF0000"
 
@@ -26,25 +28,6 @@ class Vehicle(Canvas):
     def drawVehicle(self):
         self.create_rectangle(0,0, self.winfo_width(), self.winfo_height())
 
-    #return coordinates within parent
-    #as a 2-tuple (x, y)
-    #adjusts for parent having a border
-    def getPos(self) -> Tuple[int,int]:
-        
-        #get "base" (unadjusted) coordinates
-        baseX = self.winfo_x()
-        baseY = self.winfo_y()
-
-        #get parent's border width
-        parentBorderWidth = self.master.cget("borderwidth")
-
-        #adjust coordinates and store in a tuple
-        coordinates = (
-            baseX - parentBorderWidth,
-            baseY - parentBorderWidth
-        )
-
-        return coordinates
 
     #given x and y coordinates (within this 
     #vehicle's parent), updates the vehicle's position
@@ -83,9 +66,16 @@ class Vehicle(Canvas):
         # _destination variable (and _callback if provided) and call the 
         # _animStep method the first time; _animStep will call itself 
         # as many times as it needs to until the destination is reached
-        self._destination = (xPos, yPos)
-        self._callback = callback
-        self._animStep()
+
+        # Before doing this however, the method checks if a drive is already
+        # active. If there is an active drive, a ValueError is raised as two
+        # drive operations can't take place simultaniously
+        if self.isDriving():
+            raise ValueError("Cannot start driving when a drive operation is already active")
+        else:
+            self._destination = (xPos, yPos)
+            self._callback = callback
+            self._animStep()
 
     #internal method to make one step of movement towards current destination
     #calls itself after a delay to continue moving, if needed
