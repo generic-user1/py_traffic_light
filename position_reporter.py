@@ -13,14 +13,24 @@ class PositionReporter():
     #return coordinates within parent
     #as a 2-tuple (x, y)
     #adjusts for parent having a border
-    def getPos(self) -> Tuple[int,int]:
-        
+    #by default, if targetWidget is a PositionReporter instance,
+    #then the targetWidget's getPos method will be used
+    #setting forceStatic to True will disable this behavior
+    #if targetWidget is not a PositionReporter, forceStatic has no effect
+    @staticmethod
+    def getPosOfWidget(targetWidget: Widget, forceStatic = False) -> Tuple[int, int]:
+
+        #if forceStatic is false and the target is a PositionReporter,
+        # use the target's getPos method
+        if not forceStatic and isinstance(targetWidget, PositionReporter):
+            return targetWidget.getPos()
+
         #get "base" (unadjusted) coordinates
-        baseX = self.winfo_x()
-        baseY = self.winfo_y()
+        baseX = targetWidget.winfo_x()
+        baseY = targetWidget.winfo_y()
 
         #get parent's border width
-        parentBorderWidth = self.master.cget("borderwidth")
+        parentBorderWidth = targetWidget.master.cget("borderwidth")
 
         #adjust coordinates and store in a tuple
         coordinates = (
@@ -29,6 +39,21 @@ class PositionReporter():
         )
 
         return coordinates
+        
+    
+    #return the (x, y) coordinates of this widget
+    #you can override this method to define custom 
+    #corner-locating behavior on a class by class basis
+    #(e.g. offsetting coordinates by a constant, rotating 
+    #coordinates about an axis, translating to and 
+    #from different coordinate spaces, etc)
+    def getPos(self) -> Tuple[int,int]:
+
+        #by default, getPos simply uses getPosOfWidget with forceStatic set to True 
+        #(if forceStatic were False, getPosOfWidget would call getPos again and we
+        # would be stuck in an infinite loop)
+        return self.getPosOfWidget(self, forceStatic=True)
+        
 
     #return the x and y coordinates of the top left
     #and bottom right corners of the specified widget 
@@ -36,16 +61,7 @@ class PositionReporter():
     def getCornersOfWidget(targetWidget: Widget) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         
         #get the top left corner
-        cornerTL = (
-            targetWidget.winfo_x(),
-            targetWidget.winfo_y()
-        )
-
-        #adjust top left corner by parent's border width
-        #as border width seems to offset the return value of winfo_x/y
-        parentBorderWidth = targetWidget.master.cget("borderwidth")
-        cornerTL = tuple([x - parentBorderWidth for x in cornerTL])
-         
+        cornerTL = PositionReporter.getPosOfWidget(targetWidget)
 
         #get the width and height of the widget
         widgetWidth = targetWidget.winfo_width()
