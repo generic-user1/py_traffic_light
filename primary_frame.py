@@ -34,11 +34,11 @@ class PrimaryFrame(Frame):
     def _makeChangesToParent(self):
 
         #configure row and column minimum size in parent window
-        self.parentWindow.rowconfigure(index=0, weight=1, minsize=self.FRAME_SIZE)
-        self.parentWindow.columnconfigure(index=0, weight=1, minsize=self.FRAME_SIZE)
+        self.master.rowconfigure(index=0, weight=1, minsize=self.FRAME_SIZE)
+        self.master.columnconfigure(index=0, weight=1, minsize=self.FRAME_SIZE)
 
         #set minimum size of window
-        self.parentWindow.minsize(width=self.FRAME_SIZE, height=self.FRAME_SIZE)
+        self.master.minsize(width=self.FRAME_SIZE, height=self.FRAME_SIZE)
 
         #put frame into parent window
         self.grid(row=0, column=0, padx=25, pady=25, sticky="NESW")
@@ -120,8 +120,6 @@ class PrimaryFrame(Frame):
             height=self.FRAME_SIZE
             )
         
-        #save parent
-        self.parentWindow = parentWindow
         
         #setup frame attributes
         self._setFrameAttributes()

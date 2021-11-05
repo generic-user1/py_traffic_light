@@ -118,9 +118,6 @@ class Road(Canvas):
             bg=self.ROAD_COLOR, #set background color
             highlightthickness=0 #remove border that is applied by default to canvas widgets
             )
-        
-        #save parent
-        self.parent = parent
 
         #save rotation setting
         self.horizontal = horizontal

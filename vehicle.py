@@ -17,7 +17,7 @@ class Vehicle(Canvas):
         self.create_rectangle(0,0, self.winfo_width(), self.winfo_height())
 
 
-    #override constructor to track parent
+    #override constructor to set defaults
     def __init__(self, parent):
         super().__init__(
             parent,
