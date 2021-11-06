@@ -76,8 +76,8 @@ class PrimaryFrame(Frame):
         self.horizRoad = Road(self, True)
         self.horizRoad.grid(row=2, column=0, sticky="EW", columnspan=5)
 
-        self.intersection = RoadIntersection(self)
-        self.intersection.grid(row=2, column=2)
+        #self.intersection = RoadIntersection(self)
+        #self.intersection.grid(row=2, column=2)
 
         #place vehicle
         self.vehicle = Vehicle(self)
