@@ -96,29 +96,24 @@ class Road(Canvas, Collider):
 
         #draw a blank rectangle over lines that intersect another road
         collisions = self.getCollisions()
+        thisX, thisY = self.getPos()
         for collision in collisions:
-            #unpack collision
-            collidingObject = collision[0]
-            colX = collision[1]
-            colY = collision[2]
-            colWidth = collision[3]
-            colHeight = collision[4]
 
             #if colliding object is not a Road,
             #ignore the collision
-            if not isinstance(collidingObject, Road):
+            if not isinstance(collision.collidedWith, Road):
                 continue
             else:
                 #if colliding object is a road,
-                #convert the colX/Y coordinates (in this Road's parent)
-                #to coordinates relative to this Road
-                thisX, thisY = self.getPos()
-                boxX0 = colX - thisX
-                boxY0 = thisY - colY
+                #get the corners of the collision
+                collisionTL, collisionBR = collision.getCollisionCorners()
 
-                #find bottom right coordinates given top left and width + height
-                boxX1 = boxX0 + colWidth
-                boxY1 = boxY0 + colHeight
+                #offset collision corners by the coordinates of this Road
+                #this allows us to draw a rectangle over the collision area
+                boxX0 = collisionTL[0] - thisX
+                boxX1 = collisionBR[0] - thisX
+                boxY0 = collisionTL[1] - thisY
+                boxY1 = collisionBR[1] - thisY
 
                 #draw a rectangle at these coordinates
                 #with the given dimensions
