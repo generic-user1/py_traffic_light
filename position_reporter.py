@@ -20,6 +20,7 @@ class PositionReporter(BaseWidget):
     #then the targetWidget's getPos method will be used
     #setting forceStatic to True will disable this behavior
     #if targetWidget is not a PositionReporter, forceStatic has no effect
+    #This behavior is common to all staticmethods and classmethods in this class definition
     @staticmethod
     def getPosOfWidget(targetWidget: Widget, forceStatic = False) -> Tuple[int, int]:
 
@@ -56,19 +57,44 @@ class PositionReporter(BaseWidget):
         #(if forceStatic were False, getPosOfWidget would call getPos again and we
         # would be stuck in an infinite loop)
         return self.getPosOfWidget(self, forceStatic=True)
-        
+
+    #return the width and height of the specified widget
+    #as a 2-tuple (width, height)
+    #uses instancemethods if available; set forceStatic to True to disable this
+    #see description of getPosOfWidget for more information on this behavior
+    @staticmethod
+    def getDimensionsOfWidget(targetWidget: Widget, forceStatic = False) -> Tuple[int, int]:
+
+        if not forceStatic and isinstance(targetWidget, PositionReporter):
+            return targetWidget.getDimensions()
+        else:
+            width = targetWidget.winfo_width()
+            height = targetWidget.winfo_height()
+
+            return (width, height)
+
+    #overridable instancemethod version of getDimensionsOfWidget
+    #see description of getPosOfWidget for a more detailed example
+    #of this staticmethod + instancemethod pairing concept
+    def getDimensions(self):
+        return self.getDimensionsOfWidget(self, forceStatic=True)
 
     #return the x and y coordinates of the top left
     #and bottom right corners of the specified widget 
-    @staticmethod
-    def getCornersOfWidget(targetWidget: Widget) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    #uses instancemethods if available; set forceStatic to True to disable this
+    #see description of getPosOfWidget for more information on this behavior
+    @classmethod
+    def getCornersOfWidget(cls, targetWidget: Widget, forceStatic = False) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         
-        #get the top left corner
-        cornerTL = PositionReporter.getPosOfWidget(targetWidget)
-
-        #get the width and height of the widget
-        widgetWidth = targetWidget.winfo_width()
-        widgetHeight = targetWidget.winfo_height()
+        #get top left corner and dimensions of widget
+        #use instancemethods if forceStatic is False and targetWidget
+        #is an instance of PositionReporter
+        if not forceStatic and isinstance(targetWidget, PositionReporter):
+            cornerTL = targetWidget.getPos()
+            widgetWidth, widgetHeight = targetWidget.getDimensions()
+        else:
+            cornerTL = cls.getPosOfWidget(targetWidget)
+            widgetWidth, widgetHeight = cls.getDimensionsOfWidget(targetWidget)
         
         #calculate the bottom right corner given the
         #widget's height and width
