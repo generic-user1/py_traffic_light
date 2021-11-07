@@ -3,6 +3,8 @@
 from tkinter import Canvas, Event
 
 from collider import Collider
+from collision import Collision
+from typing import List
 
 #A road widget drawn using the tkinter Canvas system
 #Scales dynamically,
@@ -141,6 +143,7 @@ class Road(Canvas, Collider):
         if event.width != self.currentWidth or event.height != self.currentHeight:
             self._updateSize(event.width, event.height)
 
+
     def __init__(self, parent, horizontal=False):
         from tkinter.constants import FLAT
 
@@ -169,6 +172,24 @@ class Road(Canvas, Collider):
             print(self,"clicked:", event.x, event.y, "root:", event.x_root, event.y_root)
         self.bind("<Button-1>", onClick)
 
+    #get a list of Collisions for each
+    #Road that this Road intersects; these can be used
+    #to draw intersections
+    def getRoadCollisions(self) -> List[Collision]:
+
+        #define a filter function that will return only 
+        #Road objects that are not this one
+        roadFilterFunc = lambda x: x != self and isinstance(x, Road)
+
+        #apply that filter function to the list of this Road's parent's children
+        #notably this list includes the current Road which is why we include
+        #a check for it in the filter function
+        siblingRoads = filter(roadFilterFunc, self.master.winfo_children())
+
+        #test collision on these sibling roads and return the results
+        roadCollisions = self.getCollisions(siblingRoads)
+
+        return roadCollisions   
 
 
 #end Road

@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from position_reporter import PositionReporter
-from typing import List
+from typing import Iterable, List
 from collision import Collision
 
 #Collider
@@ -28,21 +28,19 @@ class Collider(PositionReporter):
     #collides with, use getCollidingObjects instead
     #checks against objectsToCheck if provided
     #checks against this object's direct siblings if objectsToCheck is left empty
-    def getCollisions(self, objectsToCheck = None) -> List[Collision]:
+    #   note: Collisions support updating their values when the colliding objects move,
+    #   but you will need to call the addBindings method to activate this
+    #   The generateCollisions method may be a better option if
+    #   you want all Collisions to have active bindings from the start
+    def getCollisions(self, objectsToCheck: Iterable[Collider] = None) -> List[Collision]:
 
         #if no object list was provided, use siblings of this object
         if objectsToCheck == None:
             objectsToCheck = self.master.winfo_children()
-    
-
-        #if object list is empty, return None
-        if len(objectsToCheck) == 0:
-            print(f"<{self}>.getCollidingObjects called, but objectsToCheck was empty!")
-            return None
 
         #init list of found collisions
         foundCollisions = []
-
+        
         #iterate through objectsToCheck
         #filter is used to filter out this 
         #object from the list, if present
@@ -67,7 +65,7 @@ class Collider(PositionReporter):
             else:
                 #if objects do overlap, record this collision
                 foundCollisions.append(newCollision)
-
+        
         #after iterating through all objects, return the
         #set of found collisions
         return foundCollisions
@@ -77,7 +75,7 @@ class Collider(PositionReporter):
     #the widgets that this object collides with; 
     #no data on the position or size of the collision is included.
     #objectsToCheck works the same as in getCollisions
-    def getCollidingObjects(self, objectsToCheck = None) -> List[Collider]:
+    def getCollidingObjects(self, objectsToCheck: Iterable[Collider] = None) -> List[Collider]:
         
         #get collisions along with unneeded data
         collisions = self.getCollisions(objectsToCheck)
@@ -90,11 +88,21 @@ class Collider(PositionReporter):
         #but this lost performance is probably worth it in this case
         return list(map(lambda x: x.collidedWith, collisions))
 
+    
+    #Given an iterable containing Colliders, generates one 
+    #Collision object for each Collider. This is unlike getCollisions
+    #in that it does not check whether the collision is currently active
+    #or not, and that the Collisions returned by this method have already had 
+    #their addBindings method called so they can update their sizes
+    def generateCollisions(self, colliders: Iterable[Collider]):
 
+        collisions = []
+        for obj in colliders:
+            newCollision = Collision(self, obj)
+            newCollision.addBindings()
+            collisions.append(newCollision)
 
+        return collisions
 
-
-            
-
-
+#end Collider
         
