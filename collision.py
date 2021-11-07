@@ -113,6 +113,9 @@ class Collision():
             self.collisionHeight = collisionArea[3]
             return True
 
+    def updateCollision(self, event = None):
+        print(f"updating collision: {self}")
+        self.calculateCollision()
 
     #constructor requires two Collider objects; these are the objects involved
     #with this specific Collision instance
@@ -131,6 +134,61 @@ class Collision():
         #attempt to calculate collision area and
         #set the collision area vars
         self.calculateCollision()
+
+        #init vars for funcids (from bindings)
+        #these are needed to unbind later
+        self._collisionSourceFuncId = None
+        self._collidedWithFuncId = None
+
+
+    #adds <Configure> bindings to both Collider objects
+    #that will update the collision area when their size changes
+    #if overwrite is set to True (the default), then existing bindings
+    #(that were caused by this object) will be overwritten. If overwrite is False,
+    #a ValueError is raised when attempting to add bindings if bindings already exist
+    def addBindings(self, overwrite = True):
+        
+        if self._collisionSourceFuncId != None or self._collidedWithFuncId != None:
+            if overwrite:
+                print(f"Warning: overwriting bindings on {self}")
+                self.removeBindings()
+            else:
+                raise ValueError("Cannot add bindings because bindings already exist!")
+                
+
+        self._collisionSourceFuncId = self.collisionSource.bind("<Configure>", self.updateCollision, add=True),
+        self._collidedWithFuncId = self.collidedWith.bind("<Configure>", self.updateCollision, add=True)
+
+
+    #removes the <Configure> bindings set on Collider objects
+    #prints a message and returns False if either binding is already unset
+    #returns True if both bindings were set
+    def removeBindings(self):
+        
+        bothWereSet = True
+
+        if self._collisionSourceFuncId != None:
+            self.collisionSource.unbind("<Configure>", self._collisionSourceFuncId)
+            self._collisionSourceFuncId = None
+        else:
+            print(f"Warning: Couldn't remove binding on <{self}>.collisionSource because it didn't exist")
+            bothWereSet = False
+
+        if self._collidedWithFuncId != None:
+            self.collidedWith.unbind("<Configure>", self._collidedWithFuncId)
+            self._collidedWithFuncId = None
+        else:
+            print(f"Warning: Couldn't remove binding on <{self}>.collidedWith because it didn't exist")
+            bothWereSet = False
+
+        return bothWereSet
+
+    #methods for use with the python "with" expression
+    def __enter__(self):
+        return self
+
+    def __exit__(self):        
+        self.removeBindings()
 
     #returns True if all collision area vars are set
     #returns False if any collision area vars aren't set
@@ -276,5 +334,5 @@ class Collision():
     #override __str__ to describe collision
     def __str__(self):
         fStr = repr(self)
-        fStr += f'; (x: {self.collisionX}, y:{self.collisionY}, width:{self.collisionWidth}, height: {self.collisionHeight}'
+        fStr += f'; (x: {self.collisionX}, y:{self.collisionY}, width:{self.collisionWidth}, height: {self.collisionHeight})'
         return fStr
