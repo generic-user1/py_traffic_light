@@ -96,37 +96,6 @@ class Road(Canvas, Collider):
             #this is done by switching around which parameter goes where
                 self.create_rectangle(yOffset, xOffset, yOffset+lineHeight, xOffset+lineWidth, fill=self.LINE_COLOR)
 
-        #draw a blank rectangle over lines that intersect another road
-        collisions = self.getCollisions()
-        thisX, thisY = self.getPos()
-        for collision in collisions:
-
-            #if colliding object is not a Road,
-            #ignore the collision
-            if not isinstance(collision.collidedWith, Road):
-                continue
-            else:
-                #if colliding object is a road,
-                #get the corners of the collision
-                collisionTL, collisionBR = collision.getCollisionCorners()
-
-                #offset collision corners by the coordinates of this Road
-                #this allows us to draw a rectangle over the collision area
-                boxX0 = collisionTL[0] - thisX
-                boxX1 = collisionBR[0] - thisX
-                boxY0 = collisionTL[1] - thisY
-                boxY1 = collisionBR[1] - thisY
-
-                #draw a rectangle at these coordinates
-                #with the given dimensions
-                print("collision: ", collision)
-                #print("box x y:",boxX0, boxY0)
-                #print("box end:", boxX1, boxY1)
-                #print("box dimensions:", colWidth, colHeight)
-                self.create_rectangle(boxX0, boxY0, boxX1, boxY1, fill=self.ROAD_COLOR)
-
-
-
         return True
 
     #internal method
@@ -139,7 +108,6 @@ class Road(Canvas, Collider):
     #internal method
     #event handler for <Configure> event which fires when resizing
     def _onResize(self, event):
-        print(self, "resize")
         if event.width != self.currentWidth or event.height != self.currentHeight:
             self._updateSize(event.width, event.height)
 
