@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
-from tkinter import Canvas, Event
-
+from tkinter import Canvas
 from collider import Collider
 from collision import Collision
 from typing import List
@@ -138,7 +137,7 @@ class Road(Canvas, Collider):
 
         #check for Collisions with other roads
         #store these Collisions in a list, then enable binding on each
-        self.roadCollisions = []
+        self.roadCollisions: List[Collision] = []
         for roadCollision in self.getRoadCollisions():
             roadCollision.addBindings()
             self.roadCollisions.append(roadCollision)
@@ -151,7 +150,34 @@ class Road(Canvas, Collider):
     #that intersect another road
     #event parameter is provided so this can be used as an event handler
     def drawIntersectionBoxes(self, event = None):
-        print("drawIntersectionBoxes is not yet implemented!")
+        for roadCollision in self.roadCollisions:
+            #get the corners of the collision area
+            try:
+                cornerTL, cornerBR = roadCollision.getCollisionCorners()
+            except ValueError:
+                #ValueError is raised if the collision
+                #has no area (i.e. the two objects aren't currently colliding)
+                #in that case, continue to the next collision
+                continue
+            
+            #the coordinates returned by the collision are relative
+            #to the space in which the collision occured
+            #we convert this to the space of this
+            #Road by subtracting the Road's coordinates
+            thisX, thisY = self.getPos()
+
+            #while converting, unpack corner tuples
+            #into 4 seperate variables
+            x0 = cornerTL[0] - thisX
+            y0 = cornerTL[1] - thisY
+            x1 = cornerBR[0] - thisX
+            y1 = cornerBR[1] - thisY
+
+            #draw a rectangle using these coordinates
+            self.create_rectangle(x0, y0, x1, y1, 
+                fill=self.ROAD_COLOR, #fill with the same color as the road
+                outline=self.ROAD_COLOR #outline same color as fill
+                )    
 
 
     #get a list of Collisions for each
