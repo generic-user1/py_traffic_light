@@ -113,9 +113,45 @@ class Collision():
             self.collisionHeight = collisionArea[3]
             return True
 
+    #calculates the collision area again and updates 
+    #the internally stored values to the result.
+    #raises a <<CollisionUpdate>> event on both Colliders if any values changed
+    #used as an event handler for the <Configure> event of both Colliders
     def updateCollision(self, event = None):
-        print(f"updating collision: {self}")
-        self.calculateCollision()
+        
+        #store the current state of the Collision
+        preHasCollision = self.hasCollisionArea()
+        preX = self.collisionX
+        preY = self.collisionY
+        preWidth = self.collisionWidth
+        preHeight = self.collisionHeight
+
+        #re-calculate the collision area and update
+        #the instance vars to the result
+        hasCollision = self.calculateCollision()
+
+        #compare the new state to the old state
+        #and raise a <<CollisionUpdate>> event if anything changed
+        #note: ^ is a bitwise XOR but functions as a logical XOR in this case
+        #because the only operands involved are of the boolean type
+        if preHasCollision ^ hasCollision:
+            self.collisionSource._collisionUpdateEvent()
+            self.collidedWith._collisionUpdateEvent()
+        #if both hasCollisions are not the same, the first case
+        #will capture them; therefore this comparison only
+        #has to check one of the two
+        elif hasCollision:
+            if (self.collisionX != preX,
+                self.collisionY != preY,
+                self.collisionWidth != preWidth,
+                self.collisionHeight != preHeight):
+                
+                self.collisionSource._collisionUpdateEvent()
+                self.collidedWith._collisionUpdateEvent()
+        
+        #if both hasCollisions are False,
+        #or if all the collision vars are the same,
+        #don't raise any events
 
     #constructor requires two Collider objects; these are the objects involved
     #with this specific Collision instance

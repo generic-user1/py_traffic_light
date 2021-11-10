@@ -136,9 +136,23 @@ class Road(Canvas, Collider):
         #bind the _onResize method to the <Configure> event
         self.bind("<Configure>", self._onResize)
 
-        def onClick(event: Event):
-            print(self,"clicked:", event.x, event.y, "root:", event.x_root, event.y_root)
-        self.bind("<Button-1>", onClick)
+        #check for Collisions with other roads
+        #store these Collisions in a list, then enable binding on each
+        self.roadCollisions = []
+        for roadCollision in self.getRoadCollisions():
+            roadCollision.addBindings()
+            self.roadCollisions.append(roadCollision)
+        #because each of the Collisions is bound, it will update to reflect
+        #the new area of collision
+
+        self.bind("<<CollisionUpdate>>", self.drawIntersectionBoxes)
+
+    #draw a blank rectangle over all areas of this road
+    #that intersect another road
+    #event parameter is provided so this can be used as an event handler
+    def drawIntersectionBoxes(self, event = None):
+        print("drawIntersectionBoxes is not yet implemented!")
+
 
     #get a list of Collisions for each
     #Road that this Road intersects; these can be used

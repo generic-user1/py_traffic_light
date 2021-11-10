@@ -104,5 +104,12 @@ class Collider(PositionReporter):
 
         return collisions
 
+    #internal method
+    #raises a custom type of event on this Collider
+    #this is called by bound Collisions that 
+    #this Collider is involved in when the overlapping area changes
+    def _collisionUpdateEvent(self):
+        self.event_generate("<<CollisionUpdate>>", when="tail")
+
 #end Collider
         
