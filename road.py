@@ -4,14 +4,68 @@ from tkinter import Canvas
 from collider import Collider
 from collision import Collision
 from typing import List
+from enum import Enum
+
+#TrafficLineType
+#an enum for the different kinds of traffic lines
+class TrafficLineType(Enum):
+    DASHED = "dashed"
+    SOLID = "solid"
+
 
 #A road widget drawn using the tkinter Canvas system
-#Scales dynamically,
+#Scales dynamically, and draws yellow lines down the center
+#Detects intersections with other Roads and doesn't
+#draw lines in the area of intersection
 class Road(Canvas, Collider): 
 
     #define colors for elements of the road
     ROAD_COLOR = "#373B42"
     LINE_COLOR = "#FFFF00"
+
+    #define the width of each traffic line
+    #relative to the width of the Road
+    LINE_WIDTH_PROPORTION = 1/32
+    
+    #define the height of each traffic line
+    #relative to the width of that traffic line
+    LINE_HEIGHT_PROPORTION = 4
+    #note: this is only used for drawing dashed lines;
+    #solid lines are unaffected by this
+
+    #define the default line type that is used when
+    #drawRoad is called without specifying a line type
+    DEFAULT_LINE_TYPE = TrafficLineType.DASHED
+
+    #given a TrafficLineType or a matching string,
+    #returns a valid TrafficLineType
+    #if the provided value is not a TrafficLineType or 
+    #a string that matches one, a ValueError is raised
+    @staticmethod
+    def validateTrafficLineType(givenLineType):
+
+        #if lineType is a TrafficLineType,
+        #return it immediately
+        if isinstance(givenLineType, TrafficLineType):
+            return givenLineType
+
+        #if lineType is a string,
+        #check if that string is within TrafficLineType
+        elif isinstance(givenLineType, str):
+            #iterate through valid TrafficLineTypes
+            for lineType in TrafficLineType:
+                #check the value of each traffic light type
+                #against the given line type
+                if lineType.value == givenLineType:
+                    #if a match is found, then return the matching TrafficLineType
+                    return lineType
+        
+        #we can raise a ValueError unconditionally here because
+        #the previous if statements would've already returned 
+        #from this method if the givenLineType were valid
+        errMsg = f"{givenLineType} is not a valid TrafficLineType!"
+        raise ValueError(errMsg)
+
 
     #internal method
     #clears every object off the Canvas
@@ -21,15 +75,108 @@ class Road(Canvas, Collider):
         for object in allObjects:
             self.delete(object)
 
+    #draws solid traffic lines down the middle of the widget
+    #if clearBeforeDrawing param is True (default), 
+    #the widget will be entirely cleared before doing this
+    def drawRoad_solid(self, clearBeforeDrawing = True):
+        
+        #clear canvas if not specified otherwise
+        if clearBeforeDrawing:
+            self._clearCanvas()
 
-    #draws the traffic lines down the middle of the widget
-    #normally clears the canvas before doing this,
-    #set doNotClear to True to disable this functionality
-    def drawRoad(self, doNotClear = False):
+        #alias width and height
+        if not self.horizontal:
+            currentWidth = self.currentWidth
+            currentHeight = self.currentHeight
+        else:
+            #if this road is to be drawn horizontally,
+            #swap width and height; this effectively swaps
+            #the axis that calculations are based on
+            currentHeight = self.currentWidth
+            currentWidth = self.currentHeight
+
+        #determine the width of the road lines
+        #the width is the closest integer approximation of
+        #the line width proportion multiplied by the width of the Road
+        lineWidth = int(round(currentWidth * self.LINE_WIDTH_PROPORTION))
+
+        #return False if line width would be zero
+        if lineWidth == 0:
+            return False
+
+        #the height of the lines is the same as the height of the road overall,
+        #so there is no need to do any calculation for it
+
+        #there also is no need to calculate a Y offset: as the lines 
+        #will span the entire road, they must start at y = 0
+
+        #roads with solid lines (at least here in the US) generally
+        #have 2 solid lines in the center spaced apart by one line's width
+       
+        #calculate the x offset for the left line
+        #this is the closest integer approximation of
+        #one half the Road's width minus 1 and 1 half (1.5 or 3/2) of the line's width
+        #this puts the left line one half line's width to the left of center
+        leftXOffset = int(round((currentWidth/2) - (lineWidth * 3/2)))
+
+        #calculate the x offset for the right line
+        #this is the left x offset plus the width of one line
+        #since the left line is one half line to the left of
+        #center, adding one line's width puts the right line
+        #one half line's width to the right of center
+        rightXOffset = leftXOffset + lineWidth
+
+        #draw both lines
+        if not self.horizontal:
+            #draw left line
+            self.create_rectangle(
+                leftXOffset,
+                0,
+                leftXOffset + lineWidth,
+                currentHeight,
+                fill=self.LINE_COLOR      
+            )
+            #draw right line
+            self.create_rectangle(
+                rightXOffset,
+                0,
+                rightXOffset + lineWidth,
+                currentHeight,
+                fill=self.LINE_COLOR
+            )
+        #draw lines horizontally if needed
+        #this is done by switching around which parameter goes where
+        else:
+            #draw "left" line (which is really the top line because we are horizontal)
+            self.create_rectangle(
+                0,
+                leftXOffset,
+                currentHeight,
+                leftXOffset + lineWidth,
+                fill=self.LINE_COLOR
+            )
+            #draw "right" line (which is really the bottom line)
+            self.create_rectangle(
+                0,
+                rightXOffset,
+                currentHeight,
+                rightXOffset + lineWidth,
+                fill=self.LINE_COLOR
+            )
+
+        #Return True to indicate that lines were successfully drawn
+        return True
+
+        
+
+    #draws traffic lines down the middle of the widget
+    #if clearBeforeDrawing param is True (default),
+    #the widget will be entirely cleared before doing this
+    def drawRoad_dashed(self, clearBeforeDrawing = True):
         from math import ceil
 
         #clear canvas if not specified otherwise
-        if not doNotClear:
+        if clearBeforeDrawing:
             self._clearCanvas()
 
         #alias width and height
@@ -45,10 +192,10 @@ class Road(Canvas, Collider):
 
         #determine the size of one line segment
         #the width is the closest integer approximation of
-        #1/32nd the width of the canvas
-        lineWidth = int(round(currentWidth/32))
+        #the line width proportion multiplied by the width of the Road
+        lineWidth = int(round(currentWidth * self.LINE_WIDTH_PROPORTION))
         #the height of one line segment is 4 times its width
-        lineHeight = lineWidth*4
+        lineHeight = lineWidth * self.LINE_HEIGHT_PROPORTION
 
         if lineWidth == 0:
             #print("Cannot draw zero width line!")
@@ -97,6 +244,46 @@ class Road(Canvas, Collider):
 
         return True
 
+
+    #draws traffic lines down the middle of the road
+    #use the lineType parameter to control what type of lines are drawn
+    #clearBeforeDrawing acts the same as in drawRoad_dashed and drawRoad_solid
+    #lineType must be an instance of the TrafficLineType enum or a matching string
+    #if lineType is not provided, the current _lineType of this Road is used
+    def drawRoad(self, clearBeforeDrawing = True, lineType: TrafficLineType = None):
+        
+        if lineType == None:
+            lineType = self._lineType
+
+        #validate line type and ensure it is a TrafficLineType
+        lineType = self.validateTrafficLineType(lineType)
+
+        #call the appropriate draw function based on the specified line type
+        if lineType == TrafficLineType.DASHED:
+            return self.drawRoad_dashed()
+        elif lineType == TrafficLineType.SOLID:
+            return self.drawRoad_solid()
+        else:
+            #raise a ValueError if the line type is invalid
+            #because validateTrafficLineType was already used, this error
+            #will only be raised if a line type that exists in the enum but 
+            #does not have a corresponding draw function is used.
+            errMsg = f"Attempted to draw road with TrafficLineType \"{lineType}\" but found now corresponding draw function!"
+            raise ValueError(errMsg)
+            
+    
+    #updates the _lineType of this Road to the specified value
+    #requires a TrafficLineType or matching string; anything else will produce a ValueError
+    #note: this does not redraw the lines; to do this you can call drawRoad manually or simply wait
+    #for the _onResize event handler to call drawRoad for you
+    def setLineType(self, newLineType: TrafficLineType):
+        self._lineType = self.validateTrafficLineType(newLineType)
+
+    #returns the current _lineType of this Road
+    def getLineType(self):
+        return TrafficLineType(self._lineType)
+
+
     #internal method
     #updates the internal size values
     def _updateSize(self, width = None, height = None):
@@ -126,6 +313,9 @@ class Road(Canvas, Collider):
         #save rotation setting
         self.horizontal = horizontal
 
+        #init line type to the default
+        self._lineType = self.DEFAULT_LINE_TYPE
+
         #get dimensions
         #these will be updated dynamically at runtime
         #using the <Configure> event and onResize method
@@ -144,7 +334,10 @@ class Road(Canvas, Collider):
         #because each of the Collisions is bound, it will update to reflect
         #the new area of collision
 
+        #bind the drawIntersectionBoxes method to the <<CollisionUpdate>> event
+        #this will draw intersections over top of existing traffic lines
         self.bind("<<CollisionUpdate>>", self.drawIntersectionBoxes)
+        
 
     #draw a blank rectangle over all areas of this road
     #that intersect another road
