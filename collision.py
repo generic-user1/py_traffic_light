@@ -86,11 +86,9 @@ class Collision():
 
 
     #calculates the collision area between collisionSource and collidedWith
-    #uses these calculations to set appropriate instance vars
-    #to read these calculated values, use the appropriate getter functions defined below
-    #a return value of True indicates that a collision area between the two objects exists,
-    #whereas a return value of False indicates that no collision was found
-    def calculateCollision(self) -> bool:
+    #returns a 4-tuple (x, y, width, height) of the collision area
+    #or None if there is no collision
+    def getCollisionArea(self) -> Tuple[int, int, int, int]:
         
         #get the ranges that both objects cover
         srcRanges = self.collisionSource.getDimensionRanges()
@@ -99,59 +97,18 @@ class Collision():
         #calculate the area of overlap between these ranges
         collisionArea = self.getRectangleOverlap(srcRanges, objRanges)
 
-        #if collisionArea is None, then no collision was found
-        #in this case set no instance vars and return False
-        if collisionArea == None:
-            return False
+        #return the result of the collision
+        #this will be None if no collision was found
+        return collisionArea
 
-        #if collisionArea is not None, 
-        #set instance vars and return True
-        else:
-            self.collisionX = collisionArea[0]
-            self.collisionY = collisionArea[1]
-            self.collisionWidth = collisionArea[2]
-            self.collisionHeight = collisionArea[3]
-            return True
 
-    #calculates the collision area again and updates 
-    #the internally stored values to the result.
-    #raises a <<CollisionUpdate>> event on both Colliders if any values changed
-    #used as an event handler for the <Configure> event of both Colliders
-    def updateCollision(self, event = None):
-        
-        #store the current state of the Collision
-        preHasCollision = self.hasCollisionArea()
-        preX = self.collisionX
-        preY = self.collisionY
-        preWidth = self.collisionWidth
-        preHeight = self.collisionHeight
+    #called whenever either of the Colliders has a <Configure> event
+    #(assuming bindings have been set with Collision.addBindings())
+    #raises a <<CollisionUpdate>> event on both Colliders
+    def relayCollisionUpdateEvent(self, event = None):
 
-        #re-calculate the collision area and update
-        #the instance vars to the result
-        hasCollision = self.calculateCollision()
-
-        #compare the new state to the old state
-        #and raise a <<CollisionUpdate>> event if anything changed
-        #note: ^ is a bitwise XOR but functions as a logical XOR in this case
-        #because the only operands involved are of the boolean type
-        if preHasCollision ^ hasCollision:
-            self.collisionSource._collisionUpdateEvent()
-            self.collidedWith._collisionUpdateEvent()
-        #if both hasCollisions are not the same, the first case
-        #will capture them; therefore this comparison only
-        #has to check one of the two
-        elif hasCollision:
-            if (self.collisionX != preX,
-                self.collisionY != preY,
-                self.collisionWidth != preWidth,
-                self.collisionHeight != preHeight):
-                
-                self.collisionSource._collisionUpdateEvent()
-                self.collidedWith._collisionUpdateEvent()
-        
-        #if both hasCollisions are False,
-        #or if all the collision vars are the same,
-        #don't raise any events
+        self.collisionSource._collisionUpdateEvent()
+        self.collidedWith._collisionUpdateEvent()
 
     #constructor requires two Collider objects; these are the objects involved
     #with this specific Collision instance
@@ -160,16 +117,6 @@ class Collision():
         #init collider storage vars
         self.collisionSource: Collider = collisionSource
         self.collidedWith: Collider = collidedWith
-
-        #init collision area vars
-        self.collisionX: int = None
-        self.collisionY: int = None
-        self.collisionWidth: int = None
-        self.collisionHeight: int = None
-
-        #attempt to calculate collision area and
-        #set the collision area vars
-        self.calculateCollision()
 
         #init vars for funcids (from bindings)
         #these are needed to unbind later
@@ -192,8 +139,8 @@ class Collision():
                 raise ValueError("Cannot add bindings because bindings already exist!")
                 
 
-        self._collisionSourceFuncId = self.collisionSource.bind("<Configure>", self.updateCollision, add=True),
-        self._collidedWithFuncId = self.collidedWith.bind("<Configure>", self.updateCollision, add=True)
+        self._collisionSourceFuncId = self.collisionSource.bind("<Configure>", self.relayCollisionUpdateEvent, add=True),
+        self._collidedWithFuncId = self.collidedWith.bind("<Configure>", self.relayCollisionUpdateEvent, add=True)
 
 
     #removes the <Configure> bindings set on Collider objects
@@ -226,123 +173,72 @@ class Collision():
     def __exit__(self):        
         self.removeBindings()
 
-    #returns True if all collision area vars are set
-    #returns False if any collision area vars aren't set
+    #returns True if there is a collision area, False otherwise
     def hasCollisionArea(self):
-        hasArea = (
-            self.collisionX      != None and
-            self.collisionY      != None and
-            self.collisionWidth  != None and
-            self.collisionHeight != None
-            )
-        return hasArea
-
-    #method to set collision area
-    #params that are set are updated; those left as None are 
-    #left unchanged. To remove a collision area var, use delCollisionArea
-    def setCollisionArea(self, x: int = None, y: int = None, width: int = None, height:int = None):
-        if x != None:
-            self.collisionX = x
-        if y != None:
-            self.collisionY = y
-        if width != None:
-            self.collisionWidth = width
-        if height != None:
-            self.collisionHeight = height
-
-    
-    #sets collision area vars to None. Each var specified True is removed,
-    #any left as False are unchanged. Set 'all' to true to affect all vars;
-    #this will override any other parameters set.
-    def delCollisionArea(self, x = False, y = False, width = False, height = False, all = False):
-        if all or x:
-            self.collisionX = None
-        if all or y:
-            self.collisionY = None
-        if all or width:
-            self.collisionWidth = None
-        if all or height:
-            self.collisionHeight = None
+        #calculate the collision; if the result isn't None, then
+        #there must be a collision area
+        return (self.getCollisionArea() != None)
 
 
-    #methods to return collision variables
-    #each of these raises a ValueError if the specified var isn't set
-    def getCollisionX(self) -> int:
-        if self.collisionX == None:
-            raise ValueError(f"Attempted to read <{self}>.collisionX but it wasn't set")
-        else:
-            return self.collisionX
-
-    def getCollisionY(self) -> int:
-        if self.collisionY == None:
-            raise ValueError(f"Attempted to read <{self}>.collisionY but it wasn't set")
-        else:
-            return self.collisionY
-
-    def getCollisionWidth(self) -> int:
-        if self.collisionWidth == None:
-            raise ValueError(f"Attempted to read <{self}>.collisionWidth but it wasn't set")
-        else:
-            return self.collisionWidth
-
-    def getCollisionHeight(self) -> int:
-        if self.collisionHeight == None:
-            raise ValueError(f"Attempted to read <{self}>.collisionHeight but it wasn't set")
-        else:
-            return self.collisionHeight
-
-    
     #returns a 2-tuple (x, y) of the origin coordinates
-    #of this collision. Raises a ValueError if either coordinate
-    #is currently unset
+    #of this collision. Raises a ValueError if there is no collision
     def getCollisionOrigin(self) -> Tuple[int, int]:
-        try:
+
+        #calculate the collision area
+        collisionArea = self.getCollisionArea()
+
+        #if there is a collision area, return its position
+        if collisionArea != None:
             origin = (
-                self.getCollisionX(),
-                self.getCollisionY()
+                collisionArea[0],
+                collisionArea[1]
             )
-        except ValueError:
-            #catch ValueError to set new message
-            newMsg = f"Attempted to run <{self}>.getCollisionOrigin but not all required vars were set!"
-            raise ValueError(newMsg)
-        else:
             return origin
+        else:
+            #if there is no collision area, raise a ValueError
+            errMsg = f"Attempted to run <{self}>.getCollisionOrigin but there was no collision area!"
+            raise ValueError(errMsg)
+        
     
 
     #returns a 2-tuple (width, height) of the
     #dimensions of the collision area. 
-    #Raises a ValueError if either dimension
-    #is currently unset
+    #Raises a ValueError if there is no collision
     def getCollisionDimensions(self) -> Tuple[int, int]:
-        try:
+        
+        #calculate the collision area
+        collisionArea = self.getCollisionArea()
+
+        #if there is a collision area, return its dimensions
+        if collisionArea != None:
             dimensions = (
-                self.getCollisionWidth(),
-                self.getCollisionHeight()
+                collisionArea[2],
+                collisionArea[3]
             )
-        except ValueError:
-            #catch ValueError to set new message
-            newMsg = f"Attempted to run <{self}>.getCollisionDimensions but not all required vars were set!"
-            raise ValueError(newMsg)
-        else:
             return dimensions
+        else:
+            #if there is no collision area, raise a ValueError
+            errMsg = f"Attempted to run <{self}>.getCollisionDimensions but there was no collision area!"
+            raise ValueError(errMsg)
 
 
     #returns a 4-tuple (x, y, width, height) including
     #both the origin coordinates and dimensions of the
-    #collision area. Raises a ValueError if any of these are unset
+    #collision area. This is very similar to the return 
+    #value of getCollisionArea; the only difference this function
+    #has on that one is that this one will raise a ValueError
+    #rather than returning None if there is no collision
     def getCollisionGeometry(self) -> Tuple[int, int, int, int]:
-        if self.hasCollisionArea():
-            #if all area vars are set, return in a 4-tuple
-            geometry = (
-                self.getCollisionX(),
-                self.getCollisionY(),
-                self.getCollisionWidth(),
-                self.getCollisionHeight()
-            )
-            return geometry
+        
+        #calculate collision area
+        collisionArea = self.getCollisionArea()
+
+        #return if collision area is not none
+        if collisionArea != None:
+            return collisionArea
         else:
-            #if not all area vars are set, raise a ValueError
-            newMsg = f"Attempted to run <{self}>.getCollisionGeometry but not all required vars were set!"
+            #raise a ValueError if there is no collision area 
+            newMsg = f"Attempted to run <{self}>.getCollisionGeometry but there was no collision area!"
             raise ValueError(newMsg)
             
 
@@ -352,16 +248,20 @@ class Collision():
     #for drawing a rectangle that covers the area
     #raises a ValueError if any of the collision area vars are unset
     def getCollisionCorners(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
-        if self.hasCollisionArea():
-            #if all area vars are set, calculate corners
+        
+        #calculate collision area
+        collisionArea = self.getCollisionArea()
+
+        if collisionArea != None:
+            #if collision area is not None, calculate corners
             #and return as a tuple of tuples
-            x, y, width, height = self.getCollisionGeometry()
+            x, y, width, height = collisionArea
             cornerTL = (x, y)
             cornerBR = (x + width, y + height)
             return (cornerTL, cornerBR)
         else:
-            #if not all area vars are set, raise a ValueError
-            newMsg = f"Attempted to run <{self}>.getCollisionCorners but not all required vars were set!"
+            #if collision area is None, raise a ValueError
+            newMsg = f"Attempted to run <{self}>.getCollisionCorners but there was no collision area!"
             raise ValueError(newMsg)
 
     def __repr__(self):
@@ -370,5 +270,9 @@ class Collision():
     #override __str__ to describe collision
     def __str__(self):
         fStr = repr(self)
-        fStr += f'; (x: {self.collisionX}, y:{self.collisionY}, width:{self.collisionWidth}, height: {self.collisionHeight})'
+        collisionArea = self.getCollisionArea()
+        if collisionArea == None:
+            fStr += f"; (No Collision)"
+        else:
+            fStr += f'; (x: {collisionArea[0]}, y:{collisionArea[1]}, width:{collisionArea[2]}, height: {collisionArea[3]})'
         return fStr
