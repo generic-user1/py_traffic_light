@@ -3,7 +3,7 @@
 from tkinter import Canvas
 from collider import Collider
 from collision import Collision
-from typing import List
+from typing import Iterable, List, Tuple
 from enum import Enum
 
 #TrafficLineType
@@ -35,7 +35,7 @@ class Road(Canvas, Collider):
 
     #define the default line type that is used when
     #drawRoad is called without specifying a line type
-    DEFAULT_LINE_TYPE = TrafficLineType.DASHED
+    DEFAULT_LINE_TYPE = TrafficLineType.SOLID
 
     #given a TrafficLineType or a matching string,
     #returns a valid TrafficLineType
@@ -75,109 +75,25 @@ class Road(Canvas, Collider):
         for object in allObjects:
             self.delete(object)
 
-    #draws solid traffic lines down the middle of the widget
-    #if clearBeforeDrawing param is True (default), 
-    #the widget will be entirely cleared before doing this
-    def drawRoad_solid(self, clearBeforeDrawing = True):
-        
-        #clear canvas if not specified otherwise
-        if clearBeforeDrawing:
-            self._clearCanvas()
-
-        #alias width and height
-        if not self.horizontal:
-            currentWidth = self.currentWidth
-            currentHeight = self.currentHeight
-        else:
-            #if this road is to be drawn horizontally,
-            #swap width and height; this effectively swaps
-            #the axis that calculations are based on
-            currentHeight = self.currentWidth
-            currentWidth = self.currentHeight
-
-        #determine the width of the road lines
-        #the width is the closest integer approximation of
-        #the line width proportion multiplied by the width of the Road
-        lineWidth = int(round(currentWidth * self.LINE_WIDTH_PROPORTION))
-
-        #return False if line width would be zero
-        if lineWidth == 0:
-            return False
-
-        #the height of the lines is the same as the height of the road overall,
-        #so there is no need to do any calculation for it
-
-        #there also is no need to calculate a Y offset: as the lines 
-        #will span the entire road, they must start at y = 0
-
-        #roads with solid lines (at least here in the US) generally
-        #have 2 solid lines in the center spaced apart by one line's width
-       
-        #calculate the x offset for the left line
-        #this is the closest integer approximation of
-        #one half the Road's width minus 1 and 1 half (1.5 or 3/2) of the line's width
-        #this puts the left line one half line's width to the left of center
-        leftXOffset = int(round((currentWidth/2) - (lineWidth * 3/2)))
-
-        #calculate the x offset for the right line
-        #this is the left x offset plus the width of one line
-        #since the left line is one half line to the left of
-        #center, adding one line's width puts the right line
-        #one half line's width to the right of center
-        rightXOffset = leftXOffset + lineWidth
-
-        #draw both lines
-        if not self.horizontal:
-            #draw left line
-            self.create_rectangle(
-                leftXOffset,
-                0,
-                leftXOffset + lineWidth,
-                currentHeight,
-                fill=self.LINE_COLOR      
-            )
-            #draw right line
-            self.create_rectangle(
-                rightXOffset,
-                0,
-                rightXOffset + lineWidth,
-                currentHeight,
-                fill=self.LINE_COLOR
-            )
-        #draw lines horizontally if needed
-        #this is done by switching around which parameter goes where
-        else:
-            #draw "left" line (which is really the top line because we are horizontal)
-            self.create_rectangle(
-                0,
-                leftXOffset,
-                currentHeight,
-                leftXOffset + lineWidth,
-                fill=self.LINE_COLOR
-            )
-            #draw "right" line (which is really the bottom line)
-            self.create_rectangle(
-                0,
-                rightXOffset,
-                currentHeight,
-                rightXOffset + lineWidth,
-                fill=self.LINE_COLOR
-            )
-
-        #Return True to indicate that lines were successfully drawn
-        return True
-
-        
-
     #draws traffic lines down the middle of the widget
     #if clearBeforeDrawing param is True (default),
     #the widget will be entirely cleared before doing this
-    def drawRoad_dashed(self, clearBeforeDrawing = True):
+    #lineType specifies the type of lines to draw; if none is specified,
+    #the _lineType of this Road is used by default. 
+    #lineType must be a TrafficLineType or equivalent string
+    def drawRoad(self, clearBeforeDrawing = True, lineType: TrafficLineType = None) -> bool:
         from math import ceil
 
         #clear canvas if not specified otherwise
         if clearBeforeDrawing:
             self._clearCanvas()
+
+        if lineType == None:
+            #use this Road's lineType if none was specified
+            lineType = self._lineType
+        else:
+            #if a lineType was specified, validate it
+            lineType = self.validateTrafficLineType(lineType)
 
         #alias width and height
         if not self.horizontal:
@@ -194,75 +110,106 @@ class Road(Canvas, Collider):
         #the width is the closest integer approximation of
         #the line width proportion multiplied by the width of the Road
         lineWidth = int(round(currentWidth * self.LINE_WIDTH_PROPORTION))
-        #the height of one line segment is 4 times its width
-        lineHeight = lineWidth * self.LINE_HEIGHT_PROPORTION
 
+        #if line width is zero, return False to indicate failure
         if lineWidth == 0:
             #print("Cannot draw zero width line!")
             return False
 
-        #in order for the lines to be centered, they must
-        #be offset to the right by a certain amount, shown here
-        #integer approximation is used
-        xOffset = int(round((currentWidth/2) - (lineWidth/2)))
+        #init linesIterable to an empty list
+        #this will be overwritten by one of 
+        #the blocks of the following if statement
+        linesIterable: Iterable[Tuple[int, int, int, int]] = []
 
-        #determine the number of lines to draw
-        #the line height is doubled to account for the space
-        #between lines (the height of which is equal to the line height)
-        #the result is rounded up to the nearest integer
-        linesToDraw = ceil(currentHeight/(lineHeight*2))
+        #get a sequence of lines to draw
+        #the logic for this depends on the TrafficLineType
+        #all will set the linesIterable to some Iterable 
+        #filled with 4-tuples that describe each line to draw
+        #(xOffset, yOffset, lineWidth, lineHeight)
+        if lineType == TrafficLineType.SOLID:
+            #Logic for solid traffic lines
+            #roads with solid lines (at least here in the US) generally
+            #have 2 solid lines in the center spaced apart by one line's width
 
-        #calculate the inital space between the
-        #top of the canvas and the top of the first line
-        #line height is used twice here, the second usage is for the
-        #space between lines
-        initialYOffset = int(
-            (currentHeight - (lineHeight * linesToDraw) - (lineHeight * (linesToDraw - 1))) / 2
-            )
-        #note: if the lines exceed the height of the canvas, this expression
-        #will result in a negative value. this is fine, as this simply offsets
-        #in the opposite direction (which still centers the lines)
+            #the height of the lines is the same as the height of the road overall,
+            #so there is no need to do any calculation for it
+            #there also is no need to calculate a Y offset: as the lines 
+            #will span the entire road, they all must start at y = 0
 
-        #draw each line
-        for lineIndex in range(linesToDraw):
+            #calculate the x offset for the left line
+            #this is the closest integer approximation of
+            #one half the Road's width minus 1 and 1 half (1.5 or 3/2) of the line's width
+            #this puts the left line one half line's width to the left of center
+            leftXOffset = int(round((currentWidth/2) - (lineWidth * 3/2)))
 
-            #determine yOffset
-            #this is the height of each previous line
-            #(multiplied by two to account for space between them)
-            #plus the initial offset amount
-            yOffset = (lineIndex * (lineHeight*2)) + initialYOffset
-            #Sidenote: Parens aren't needed here,
-            #but they improve clarity
+            #calculate the x offset for the right line
+            #this is the left x offset plus the width of one line
+            #since the left line is one half line to the left of
+            #center, adding one line's width puts the right line
+            #one half line's width to the right of center
+            rightXOffset = leftXOffset + lineWidth
 
-            #draw the line using the calculated offset
-            if not self.horizontal:
-                self.create_rectangle(xOffset, yOffset, xOffset+lineWidth, yOffset+lineHeight, fill=self.LINE_COLOR)
-            else:
-            #draw lines horizontally if needed
-            #this is done by switching around which parameter goes where
-                self.create_rectangle(yOffset, xOffset, yOffset+lineHeight, xOffset+lineWidth, fill=self.LINE_COLOR)
-
-        return True
-
-
-    #draws traffic lines down the middle of the road
-    #use the lineType parameter to control what type of lines are drawn
-    #clearBeforeDrawing acts the same as in drawRoad_dashed and drawRoad_solid
-    #lineType must be an instance of the TrafficLineType enum or a matching string
-    #if lineType is not provided, the current _lineType of this Road is used
-    def drawRoad(self, clearBeforeDrawing = True, lineType: TrafficLineType = None):
+            #using these offsets, create a 2-tuple 
+            #of two 4-tuples; one for each line
+            #this tuple is used as the linesIterable
+            #for the SOLID TrafficLineType
+            linesIterable = (
+                (leftXOffset, 0, lineWidth, currentHeight),
+                (rightXOffset, 0, lineWidth, currentHeight)
+                )
         
-        if lineType == None:
-            lineType = self._lineType
+        elif lineType == TrafficLineType.DASHED:
+            #Logic for dashed traffic lines
+            #roads with dashed lines generally 
+            #have them spaced one line's length apart
 
-        #validate line type and ensure it is a TrafficLineType
-        lineType = self.validateTrafficLineType(lineType)
+            #the height of one line segment is 4 times its width
+            lineHeight = lineWidth * self.LINE_HEIGHT_PROPORTION
 
-        #call the appropriate draw function based on the specified line type
-        if lineType == TrafficLineType.DASHED:
-            return self.drawRoad_dashed()
-        elif lineType == TrafficLineType.SOLID:
-            return self.drawRoad_solid()
+            #in order for the lines to be centered, they must
+            #be offset to the right by a certain amount, shown here
+            #integer approximation is used
+            xOffset = int(round((currentWidth/2) - (lineWidth/2)))
+
+            #determine the number of lines to draw
+            #the line height is doubled to account for the space
+            #between lines (the height of which is equal to the line height)
+            #the result is rounded up to the nearest integer
+            numberOfLines = ceil(currentHeight/(lineHeight*2))
+
+            #calculate the inital space between the
+            #top of the canvas and the top of the first line
+            #line height is used twice here, the second usage is for the
+            #space between lines
+            initialYOffset = int(
+                (currentHeight - (lineHeight * numberOfLines) - (lineHeight * (numberOfLines - 1))) / 2
+                )
+            #note: if the lines exceed the height of the canvas, this expression
+            #will result in a negative value. this is fine, as this simply offsets
+            #in the opposite direction (which still centers the lines)
+
+            #define a generator function that will calculate the 
+            #offsets of each line in sequence and return them
+            #this generator is used as the linesIterable
+            #for the DASHED TrafficLineType
+            def linesGenerator():
+                for lineIndex in range(numberOfLines):
+                    #determine yOffset
+                    #this is the height of each previous line
+                    #(multiplied by two to account for space between them)
+                    #plus the initial offset amount
+                    yOffset = (lineIndex * (lineHeight*2)) + initialYOffset
+                    #Sidenote: Parens aren't needed here,
+                    #but they improve clarity
+
+                    #yield the position and dimensions of the
+                    #line including the calculated offset
+                    #yield is what makes this a generator rather
+                    #than a normal function
+                    yield (xOffset, yOffset, lineWidth, lineHeight)
+
+            linesIterable = linesGenerator()
+
         else:
             #raise a ValueError if the line type is invalid
             #because validateTrafficLineType was already used, this error
@@ -270,8 +217,22 @@ class Road(Canvas, Collider):
             #does not have a corresponding draw function is used.
             errMsg = f"Attempted to draw road with TrafficLineType \"{lineType}\" but found now corresponding draw function!"
             raise ValueError(errMsg)
-            
-    
+
+        #draw each line
+        for xOffset, yOffset, lineWidth, lineHeight in linesIterable:
+
+            #draw the line using provided position and dimensions
+            if not self.horizontal:
+                self.create_rectangle(xOffset, yOffset, xOffset+lineWidth, yOffset+lineHeight, fill=self.LINE_COLOR)
+            else:
+            #draw lines horizontally if needed
+            #this is done by switching around which parameter goes where
+                self.create_rectangle(yOffset, xOffset, yOffset+lineHeight, xOffset+lineWidth, fill=self.LINE_COLOR)
+
+        #return True to indicate success
+        return True
+
+
     #updates the _lineType of this Road to the specified value
     #requires a TrafficLineType or matching string; anything else will produce a ValueError
     #note: this does not redraw the lines; to do this you can call drawRoad manually or simply wait
@@ -280,7 +241,7 @@ class Road(Canvas, Collider):
         self._lineType = self.validateTrafficLineType(newLineType)
 
     #returns the current _lineType of this Road
-    def getLineType(self):
+    def getLineType(self) -> TrafficLineType:
         return TrafficLineType(self._lineType)
 
 
