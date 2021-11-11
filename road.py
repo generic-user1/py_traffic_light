@@ -75,10 +75,11 @@ class Road(Canvas, Collider):
         for object in allObjects:
             self.delete(object)
 
+    #internal method
     #draws solid traffic lines down the middle of the widget
     #if clearBeforeDrawing param is True (default), 
     #the widget will be entirely cleared before doing this
-    def drawRoad_solid(self, clearBeforeDrawing = True):
+    def _drawRoad_solid(self, clearBeforeDrawing = True):
         
         #clear canvas if not specified otherwise
         if clearBeforeDrawing:
@@ -169,10 +170,11 @@ class Road(Canvas, Collider):
 
         
 
+    #internal method
     #draws traffic lines down the middle of the widget
     #if clearBeforeDrawing param is True (default),
     #the widget will be entirely cleared before doing this
-    def drawRoad_dashed(self, clearBeforeDrawing = True):
+    def _drawRoad_dashed(self, clearBeforeDrawing = True):
         from math import ceil
 
         #clear canvas if not specified otherwise
@@ -260,9 +262,9 @@ class Road(Canvas, Collider):
 
         #call the appropriate draw function based on the specified line type
         if lineType == TrafficLineType.DASHED:
-            return self.drawRoad_dashed()
+            return self._drawRoad_dashed()
         elif lineType == TrafficLineType.SOLID:
-            return self.drawRoad_solid()
+            return self._drawRoad_solid()
         else:
             #raise a ValueError if the line type is invalid
             #because validateTrafficLineType was already used, this error
