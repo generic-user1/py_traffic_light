@@ -20,8 +20,6 @@ def main():
 
     def testFunc():
         
-        print(contentFrame.horizRoad.getRoadCollisions())
-
         light = contentFrame.getSelectedLight()
         light.incrementState()
         contentFrame.incrementSelectedLight()
