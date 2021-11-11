@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from position_reporter import PositionReporter
-from typing import Iterable, List
+from typing import Iterable, List, Tuple
 from collision import Collision
 
 #Collider
@@ -15,7 +15,10 @@ class Collider(PositionReporter):
     #the first range is the x range of the object, the second is the y range
     #these ranges encompass all points along each axis that are
     #within the bounds of the object
-    def getDimensionRanges(self):
+    def getDimensionRanges(self) -> Tuple[
+            Tuple[Tuple[int, int], Tuple[int, int]],
+            Tuple[Tuple[int, int], Tuple[int, int]]
+            ]:
         cornerTL, cornerBR = self.getCorners()
         xRange = (cornerTL[0], cornerBR[0])
         yRange = (cornerTL[1], cornerBR[1])
@@ -28,7 +31,7 @@ class Collider(PositionReporter):
     #collides with, use getCollidingObjects instead
     #checks against objectsToCheck if provided
     #checks against this object's direct siblings if objectsToCheck is left empty
-    #   note: Collisions support updating their values when the colliding objects move,
+    #   note: Collisions can raise a <<CollisionUpdate>> event on its Colliders
     #   but you will need to call the addBindings method to activate this
     #   The generateCollisions method may be a better option if
     #   you want all Collisions to have active bindings from the start
@@ -94,7 +97,7 @@ class Collider(PositionReporter):
     #in that it does not check whether the collision is currently active
     #or not, and that the Collisions returned by this method have already had 
     #their addBindings method called so they can update their sizes
-    def generateCollisions(self, colliders: Iterable[Collider]):
+    def generateCollisions(self, colliders: Iterable[Collider]) -> List[Collision]:
 
         collisions = []
         for obj in colliders:
