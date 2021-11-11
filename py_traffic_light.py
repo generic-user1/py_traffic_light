@@ -19,7 +19,7 @@ def main():
     contentFrame = PrimaryFrame(mainWindow)
 
     def testFunc():
-        
+
         light = contentFrame.getSelectedLight()
         light.incrementState()
         contentFrame.incrementSelectedLight()
@@ -30,9 +30,10 @@ def main():
         contentFrame.vehicle.place(x=roadTL[0], y=roadTL[1])
         def driveToBottom():
             x, y = [pos - vSize for pos in roadBR]
-            def cbTest():
-                print("Callback Success!")
-            contentFrame.vehicle.driveToPos(x, y, cbTest)
+            def cbTest(event=None):
+                print("<<DriveComplete>> event!")
+            contentFrame.vehicle.bind("<<DriveComplete>>", cbTest)
+            contentFrame.vehicle.driveToPos(x, y)
         contentFrame.after(10, driveToBottom)
         
     

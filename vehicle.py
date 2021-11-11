@@ -40,10 +40,10 @@ class Vehicle(Canvas, Collider):
     #note that this method DOES NOT BLOCK!!!
     #execution will return from this method 
     #long before the vehicle reaches its destination
-    #if you need to do something after the drive completes, set the callback paramater
-    #to a callable object (like a function) and that object will be called
+    #if you need to do something after the drive completes, 
+    #bind a method to the <<DriveComplete>> method of this Vehicle
     #when the drive completes 
-    def driveToPos(self, xPos: int, yPos: int, callback: Callable = None):
+    def driveToPos(self, xPos: int, yPos: int):
 
         # The way that movement animation works internally
         # is not entirely clear, so I will explain it here.
@@ -63,9 +63,9 @@ class Vehicle(Canvas, Collider):
         # (hint: discrete function calls means discrete scopes)
 
         # To actually start animation, this method only needs to set the
-        # _destination variable (and _callback if provided) and call the 
-        # _animStep method the first time; _animStep will call itself 
-        # as many times as it needs to until the destination is reached
+        # _destination variable and call the _animStep method the first time;
+        # _animStep will call itself as many times as it needs to
+        # until the destination is reached
 
         # Before doing this however, the method checks if a drive is already
         # active. If there is an active drive, a ValueError is raised as two
@@ -74,15 +74,12 @@ class Vehicle(Canvas, Collider):
             raise ValueError("Cannot start driving when a drive operation is already active")
         else:
             self._destination = (xPos, yPos)
-            self._callback = callback
             self._animStep()
 
     #internal method to make one step of movement towards current destination
     #calls itself after a delay to continue moving, if needed
     #returns immediately if no destination is set, or if destination is already reached
     def _animStep(self):
-
-        
 
         #check for missing destination        
         if self._destination == None:
@@ -98,13 +95,10 @@ class Vehicle(Canvas, Collider):
         
 
         #if current position exactly matches destination,
-        #clear destination, call the callback method if set,
+        #clear destination, raise a <<DriveComplete>> event,
         #then return without moving the vehicle
         if destX == currentX and destY == currentY:
-            if self._callback != None:
-                self._callback()
-            else:
-                print("Drive complete, no callback")
+            self.event_generate("<<DriveComplete>>", when="tail")
             self.abortDrive()
             return
 
@@ -160,12 +154,6 @@ class Vehicle(Canvas, Collider):
         #when animating movement from point to point
         #being set to None indicates no active movement
         self._destination = None
-
-        #init _callback to None
-        #this can be set to a callable that will
-        #be called when an animated movement (drive) completes
-        #being set to None indicates no callback method
-        self._callback = None
         
 
     #returns True if a movement is currently active; False otherwise
@@ -174,5 +162,4 @@ class Vehicle(Canvas, Collider):
 
     #stop animated movement, if one is currently active
     def abortDrive(self):
-        self._callback = None
         self._destination = None
