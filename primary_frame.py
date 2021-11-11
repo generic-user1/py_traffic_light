@@ -66,7 +66,6 @@ class PrimaryFrame(Frame):
     def _placeWidgets(self):
         from road import Road
         from traffic_light import TrafficLight
-        from road_intersection import RoadIntersection
         from vehicle import Vehicle
 
         #create and position road widgets
@@ -75,9 +74,6 @@ class PrimaryFrame(Frame):
 
         self.horizRoad = Road(self, True)
         self.horizRoad.grid(row=2, column=0, sticky="EW", columnspan=5)
-
-        #self.intersection = RoadIntersection(self)
-        #self.intersection.grid(row=2, column=2)
 
         #place vehicle
         self.vehicle = Vehicle(self)
@@ -110,7 +106,6 @@ class PrimaryFrame(Frame):
         from typing import Dict
         from road import Road
         from traffic_light import TrafficLight
-        from road_intersection import RoadIntersection
         from vehicle import Vehicle
 
         #run superclass constructor
@@ -133,7 +128,6 @@ class PrimaryFrame(Frame):
         #roads are created within _placeWidgets
         self.horizRoad : Road = None
         self.vertRoad : Road = None
-        self.intersection : RoadIntersection = None
 
         #create var for storing vehicle
         #vehicle is created within _placeWidgets
