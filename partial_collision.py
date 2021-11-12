@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from collision import Collision
 from typing import TYPE_CHECKING
+
+from proportional_bb import ProportionalBB
 if TYPE_CHECKING:
     from collider import Collider
 
@@ -20,27 +22,6 @@ class PartialCollision(Collision):
     DEFAULT_ACTIVE_START = 0.0
     DEFAULT_ACTIVE_END = 1.0
     
-    ### NOTES ON ACTIVE AREA DEFINITION ###
-    # The active area of each Collider is defined by four bounds in total:
-    # - the X dimension start bound
-    # - the X dimension end bound
-    # - the Y dimension start bound
-    # - the Y dimension end bound
-    # this allows you to define an inner rectangle. by default,
-    # all start bounds are set to 0 and all end bounds to 1, so 
-    # the inner rectangle has the full size of the Collider
-    #
-    # bounds in PartialCollision are defined as the portion 
-    # of the total dimension (x or y) that lays behind the boundary
-    # for example:
-    #  a bound at 0.0 is at the start
-    #  a bound at 0.5 is in the middle
-    #  a bound at 1.0 is at the end
-    # bounds are defined in this way so that if the size of
-    # a Collider changes, the bounds stay in the same positions
-    # relative to each other and the borders of the widget (though
-    # this necessarily changes the actual pixel position of the bound)
-    ########################################
 
     #override constructor
     def __init__(self, collisionSource: Collider, collidedWith: Collider):
@@ -49,7 +30,19 @@ class PartialCollision(Collision):
         super().__init__(collisionSource, collidedWith)
 
         #init the active area bound vars
-        #each Collider needs four bounds:
-        #one start and one end for each dimension (x and y)
-        raise NotImplementedError("PartialCollision is not yet implemented!")
+        #each Collider needs a ProportionalBB
+        #to store the bounding box of its active area
+        self.collisionSourceActiveArea = ProportionalBB(
+            self.DEFAULT_ACTIVE_START,
+            self.DEFAULT_ACTIVE_END,
+            self.DEFAULT_ACTIVE_START,
+            self.DEFAULT_ACTIVE_END
+            )
+
+        self.collidedWithActiveArea = ProportionalBB(
+            self.DEFAULT_ACTIVE_START,
+            self.DEFAULT_ACTIVE_END,
+            self.DEFAULT_ACTIVE_START,
+            self.DEFAULT_ACTIVE_END
+            )
         
