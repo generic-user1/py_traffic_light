@@ -102,7 +102,7 @@ class Vehicle(Canvas, Collider):
             self.abortDrive()
             return
 
-        #to guarentee correct speed, the deviation of the
+        #to guarantee correct speed, the deviation of the
         #actual delay time from the desired delay time
         #must be matched with an equivalent deviation in distance
         #to calculate this distance deviation, we first calculate
