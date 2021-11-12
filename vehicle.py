@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from tkinter import Canvas
-from typing import Callable
 from collider import Collider
 
 
@@ -80,6 +79,7 @@ class Vehicle(Canvas, Collider):
     #calls itself after a delay to continue moving, if needed
     #returns immediately if no destination is set, or if destination is already reached
     def _animStep(self):
+        from datetime import datetime
 
         #check for missing destination        
         if self._destination == None:
@@ -93,7 +93,7 @@ class Vehicle(Canvas, Collider):
         #get current position
         currentX, currentY = self.getPos()
         
-
+    
         #if current position exactly matches destination,
         #clear destination, raise a <<DriveComplete>> event,
         #then return without moving the vehicle
@@ -102,13 +102,35 @@ class Vehicle(Canvas, Collider):
             self.abortDrive()
             return
 
+        #to guarentee correct speed, the deviation of the
+        #actual delay time from the desired delay time
+        #must be matched with an equivalent deviation in distance
+        #to calculate this distance deviation, we first calculate
+        #the time deviation of the last frame
+
+        #measure current time against last frame time to find
+        #the actual time between frames in milliseconds
+        currentTime = datetime.now()
+        try:
+            actualDelay = (currentTime - self.lastFrameTime).total_seconds() * 1000
+        except TypeError:
+            #TypeError is raised if lastFrameTime isn't set
+            #in this case, set actual to the movement delay
+            actualDelay = self.movementDelay
+        
+        #adjusted distance is the same proportion of 
+        #movement distance that actual delay is of movement delay
+        adjustedDistance = int(self.movementDistance * (actualDelay/self.movementDelay))
+
         #determine new X position based on current position,
-        #destination position, and movement distance
+        #destination position, and adjusted movement distance
         if destX > currentX:
-            #the min expression ensures that the destination is never overshot
-            newX = currentX + min(destX - currentX, self.movementDistance)
+            #the min expression ensures that the destination is never overshot,
+            #as the adjustedDistance is selected if and only if
+            #it is less than the remaining distance to the destination
+            newX = currentX + min(destX - currentX, adjustedDistance)
         elif destX < currentX:
-            newX = currentX - min(currentX - destX, self.movementDistance)
+            newX = currentX - min(currentX - destX, adjustedDistance)
         else:
             #if destination X exactly equals current X, then newX
             #is set to current X, resulting in no X movement
@@ -116,9 +138,9 @@ class Vehicle(Canvas, Collider):
 
         #determine new Y position using similar logic to X position
         if destY > currentY:
-            newY = currentY + min(destY - currentY, self.movementDistance)
+            newY = currentY + min(destY - currentY, adjustedDistance)
         elif destY < currentY:
-            newY = currentY - min(currentY  - destY, self.movementDistance)
+            newY = currentY - min(currentY  - destY, adjustedDistance)
         else:
             newY = currentY
 
@@ -127,7 +149,11 @@ class Vehicle(Canvas, Collider):
 
         #repeat process after delay
         self.after(self.movementDelay, self._animStep)
-
+        
+        #after all processing for this animation step,
+        #set the lastFrameTime so the frameDelta 
+        #(deviation from expected delay) can be calculated
+        self.lastFrameTime = datetime.now()
 
     #override constructor
     def __init__(self, parent, movementDelay: int = None, movementDistance: int = None):
@@ -142,6 +168,7 @@ class Vehicle(Canvas, Collider):
         #init animation control variables
         self.movementDelay = movementDelay 
         self.movementDistance = movementDistance
+        self.lastFrameTime = None
 
         #set defaults if no value was provided for either control var
         if movementDelay == None:
@@ -154,7 +181,52 @@ class Vehicle(Canvas, Collider):
         #when animating movement from point to point
         #being set to None indicates no active movement
         self._destination = None
-        
+
+    #drive in a specified cardinal direction
+    #by a specified distance (in pixels)
+    #valid directions are the strings:
+    #"up", "down", "left", and "right"
+    #similar to driveToPos, this method DOES NOT BLOCK
+    def driveDistance(self, distance: int, direction: str):
+
+        #round distance to the nearest integer that is
+        #greater than zero
+        distance = int(round(distance))
+
+        #get current position
+        x, y = self.getPos()
+
+        #either add or subtract 'distance' to one of the axes
+        #depending on the specified direction
+        if direction == "up":
+            y -= distance
+        elif direction == "down":
+            y += distance
+        elif direction == "left":
+            x -= distance
+        elif direction == "right":
+            x += distance
+        else:
+            #if direction is not one of the above four strings,
+            #raise a ValueError
+            raise ValueError(f"Invalid direction: {direction}")
+
+        #drive to the calculated coordinates
+        self.driveToPos(x, y)
+
+    #methods for driving in cardinal directions by a distance
+    #all four call driveDistance internally and will behave similarly
+    def driveUp(self, distance: int):
+        self.driveDistance(distance, "up")
+
+    def driveDown(self, distance: int):
+        self.driveDistance(distance, "down")
+
+    def driveLeft(self, distance: int):
+        self.driveDistance(distance, "left")
+
+    def driveRight(self, distance: int):
+        self.driveDistance(distance, "right")
 
     #returns True if a movement is currently active; False otherwise
     def isDriving(self):
@@ -163,3 +235,65 @@ class Vehicle(Canvas, Collider):
     #stop animated movement, if one is currently active
     def abortDrive(self):
         self._destination = None
+        self.lastFrameTime = None
+
+
+    #returns current speed setting of
+    #this vehicle in pixels per second
+    #the set of possible speeds is a subset of 
+    #the rational numbers (integers divided by integers)
+    #but does not include all of them
+    def getSpeed(self) -> float:
+
+        #the speed of a vehicle is not stored directly;
+        #speed is a measure of distance over time and therefore can
+        #be calculated based on movementDistance and movementDelay
+
+        #get a number of pixels per millisecond by dividing
+        #the number of pixels traveled in one step by the duration of that step
+        pixelsPerMs = self.movementDistance / self.movementDelay
+
+        #convert pixels per millisecond to pixels per second
+        #by multiplying by the number of milliseconds in one second (1000)
+        pixelsPerSec = pixelsPerMs * 1000
+
+        return pixelsPerSec
+
+    #given a number of pixels per second, adjusts the
+    #movement speed and movement distance to make the 
+    #Vehicle "drive" at approximately the desired speed
+    #note: the actual speed set will be a rational number
+    #approximtion of the desired speed, but not nessecarily 
+    #the best rational approximation - speeds with
+    #denominators (movement delays) closer to the default are preferred
+    #returns the actual speed that was set,  
+    #same as the result of the getSpeed method
+    def setSpeed(self, desiredPixelsPerSecond: float) -> float:
+
+        #convert pixels per second to pixels per millisecond,
+        #as the time unit used for delay is milliseconds
+        desiredSpeed = desiredPixelsPerSecond / 1000
+
+        #calculate the movement distance required to achieve
+        #the desired speed with the default movement delay
+        idealMovementDistance = desiredSpeed * self.DEFAULT_MOVEMENT_DELAY
+
+        #the ideal movement distance may be (probably is) fractional
+        #but the actual movement distance must be an integer greater than 
+        #or equal to 1. we can approach the desired speed by 
+        #using the closest approximation of the ideal distance 
+        #in combination with an adjusted movement delay
+
+        #set the movement distance to the closet integer approximation
+        #of the ideal distance that is 1 or greater
+        self.movementDistance = max(1, int(round(idealMovementDistance)))
+
+        #given that movement distance and the desired speed, find
+        #the ideal movement delay. since only the actual delay is
+        #needed, this ideal delay is immediately rounded to the nearest
+        #integer that is greater or equal to 1
+        self.movementDelay = max(1, int(round(self.movementDistance / desiredSpeed)))
+
+        #calculate the actual speed based on the set
+        #distance and delay and return the result
+        return self.getSpeed()

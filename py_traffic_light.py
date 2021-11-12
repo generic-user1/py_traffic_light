@@ -20,11 +20,14 @@ def main():
 
     def testFunc():
 
-        light = contentFrame.getSelectedLight()
-        light.incrementState()
-        contentFrame.incrementSelectedLight()
+        testSpeed = 100
 
-        roadTL, roadBR = contentFrame.vertRoad.getCorners()
+        actualSpeed = contentFrame.vehicle.setSpeed(testSpeed)
+        print(f"Set speed to {testSpeed}; actual speed: {actualSpeed}")
+        print(f"Movement Distance:{contentFrame.vehicle.movementDistance}")
+        print(f"Movement Delay:{contentFrame.vehicle.movementDelay}")
+
+        roadTL, roadBR = contentFrame.horizRoad.getCorners()
         vSize = contentFrame.vehicle.winfo_width()
 
         contentFrame.vehicle.place(x=roadTL[0], y=roadTL[1])
@@ -33,7 +36,7 @@ def main():
             def cbTest(event=None):
                 print("<<DriveComplete>> event!")
             contentFrame.vehicle.bind("<<DriveComplete>>", cbTest)
-            contentFrame.vehicle.driveToPos(x, y)
+            contentFrame.vehicle.driveRight(contentFrame.winfo_width())
         contentFrame.after(10, driveToBottom)
         
     
