@@ -15,10 +15,7 @@ class Collider(PositionReporter):
     #the first range is the x range of the object, the second is the y range
     #these ranges encompass all points along each axis that are
     #within the bounds of the object
-    def getDimensionRanges(self) -> Tuple[
-            Tuple[Tuple[int, int], Tuple[int, int]],
-            Tuple[Tuple[int, int], Tuple[int, int]]
-            ]:
+    def getDimensionRanges(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         cornerTL, cornerBR = self.getCorners()
         xRange = (cornerTL[0], cornerBR[0])
         yRange = (cornerTL[1], cornerBR[1])
