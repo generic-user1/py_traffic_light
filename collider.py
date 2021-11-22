@@ -11,6 +11,11 @@ from collision import Collision
 
 class Collider(PositionReporter):
 
+    #make PositionReporter a mixin
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        print(f"{self}.ColliderInit")
+
     #returns two ranges as 2-tuples (start, stop)
     #the first range is the x range of the object, the second is the y range
     #these ranges encompass all points along each axis that are

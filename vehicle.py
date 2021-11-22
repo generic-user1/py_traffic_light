@@ -7,7 +7,7 @@ from collider import Collider
 #a widget to represent a vehicle; can "drive"
 #across a Frame
 
-class Vehicle(Canvas, Collider):
+class Vehicle(Collider, Canvas):
 
     DEFAULT_COLOR = "#FF0000"
 

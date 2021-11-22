@@ -1,17 +1,35 @@
 #!/usr/bin/env python3
 
 from typing import Tuple
-from tkinter import Widget
-from tkinter import Misc as BaseWidget 
-#I import tkinter.Misc as BaseWidget to be more representative of what it is;
+from tkinter import Misc as BaseTkObject
+#I import tkinter.Misc as BaseTkObject to be more representative of what it is;
 #This is a personal preference and is by no means required
+#(you may consider this bad form as there is another class
+# in tkinter called BaseWidget already; as it happens that class
+# already inherits )
 
 #Position Reporter
-#An "interface" for widgets to report their current position
+#An "interface" (implemented as a mixin) for widgets to report their current position
 #I say "interface" but the definition is concrete; I simply intend for
 #this class to be used in addition to a more useful base class
 
-class PositionReporter(BaseWidget):
+class PositionReporter(BaseTkObject):
+
+    #override constructor to make PositionReporter a mixin class
+    #*args and **kwargs capture any and all arguments passed to the
+    #constructor of another class (PositionReporter itself doesn't
+    #take any arguments in the constructor)
+    def __init__(self, *args, **kwargs):
+
+        #run the superclass constructor using 
+        #all arguments that were passed
+        super().__init__(*args, **kwargs)
+        #if another class inherits from both
+        #PositionReporter and another class then this call to 
+        #super().__init__ will point to that second class
+        #this is because tkinter.Misc (aka BaseTkObject) has no __init__ method
+        #(I beleive it was designed as an interface similar to this one)
+        print(f"{self}.PositionReporterInit")
 
     #return coordinates within parent
     #as a 2-tuple (x, y)
@@ -22,7 +40,7 @@ class PositionReporter(BaseWidget):
     #if targetWidget is not a PositionReporter, forceStatic has no effect
     #This behavior is common to all staticmethods and classmethods in this class definition
     @staticmethod
-    def getPosOfWidget(targetWidget: Widget, forceStatic = False) -> Tuple[int, int]:
+    def getPosOfWidget(targetWidget: BaseTkObject, forceStatic = False) -> Tuple[int, int]:
 
         #if forceStatic is false and the target is a PositionReporter,
         # use the target's getPos method
@@ -63,7 +81,7 @@ class PositionReporter(BaseWidget):
     #uses instancemethods if available; set forceStatic to True to disable this
     #see description of getPosOfWidget for more information on this behavior
     @staticmethod
-    def getDimensionsOfWidget(targetWidget: Widget, forceStatic = False) -> Tuple[int, int]:
+    def getDimensionsOfWidget(targetWidget: BaseTkObject, forceStatic = False) -> Tuple[int, int]:
 
         if not forceStatic and isinstance(targetWidget, PositionReporter):
             return targetWidget.getDimensions()
@@ -84,7 +102,7 @@ class PositionReporter(BaseWidget):
     #uses instancemethods if available; set forceStatic to True to disable this
     #see description of getPosOfWidget for more information on this behavior
     @classmethod
-    def getCornersOfWidget(cls, targetWidget: Widget, forceStatic = False) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+    def getCornersOfWidget(cls, targetWidget: BaseTkObject, forceStatic = False) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         
         #get top left corner and dimensions of widget
         #use instancemethods if forceStatic is False and targetWidget

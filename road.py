@@ -17,7 +17,7 @@ class TrafficLineType(Enum):
 #Scales dynamically, and draws yellow lines down the center
 #Detects intersections with other Roads and doesn't
 #draw lines in the area of intersection
-class Road(Canvas, Collider): 
+class Road(Collider, Canvas): 
 
     #define colors for elements of the road
     ROAD_COLOR = "#373B42"
