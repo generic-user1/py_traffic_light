@@ -102,8 +102,8 @@ class ProportionalBB:
         #if the attribute is not a bound, use the normal
         #__setattr__ method instead of this custom one
         if name not in self.getBoundNames():
-            print("name not found:", name)
-            print("current names:", self.__dict__.keys())
+            #print("name not found:", name)
+            #print("current names:", self.__dict__.keys())
             return super().__setattr__(name, value)
         
         else:
