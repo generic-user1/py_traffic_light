@@ -169,10 +169,79 @@ class ProportionalBB:
 
     #end __setattr__        
 
+    #Given a range (in the form of two numeric values rangeStart and rangeEnd),
+    #calculates the actual numeric range of this ProportionalBB over that range
+    #on the specified axis. The axis is controlled by isX: 
+    # if true (default), the X bounds are used; if false, the y bounds are used
+    #Raises a ValueError if provided end is not greater than provided start
+    #For example:
+    #
+    # A range of 0, 100 
+    # on a Proportional axis with bounds 0.0, 1.0 
+    # returns (0, 100)
+    #
+    # A range of 100, 500 
+    # on a Proportional axis with bounds 0.0, 1.0 
+    # returns (100, 500)
+    #
+    # A range of 0, 100 
+    # on a Proportional axis with bounds 0.25, 0.75 
+    # returns (25, 75)
+    #
+    # A range of 100, 500 
+    # on a Proportional axis with bounds 0.25, 0.75 
+    # returns (200, 400)
+    def calculateRange(self,
+        rangeStart: int or float, 
+        rangeEnd: int or float, 
+        isX: bool = True
+        ) -> Tuple[float, float]:
+        
+        #get the overall size of the range
+        rangeSize = rangeEnd - rangeStart
+
+        #raise a ValueError if rangeSize is invalid
+        if rangeSize <= 0:
+            errMsg = f"Provided rangeEnd ({rangeEnd}) was not greater than provided rangeStart ({rangeStart})"
+            raise ValueError(errMsg)
+
+        #get the proportional bound values for the specified axis
+        if isX:
+            startBoundProportion = self.xStart
+            endBoundProportion = self.xEnd
+        else:
+            startBoundProportion = self.yStart
+            endBoundProportion = self.yEnd
+
+        #calculate the literal bound values using the proportional ones
+        #each literal bound value is a proportion of the overall 
+        #range size offset by the start position of the range 
+        startBound = (startBoundProportion * rangeSize) + rangeStart
+        endBound = (endBoundProportion * rangeSize) + rangeStart
+
+        return (startBound, endBound)
+
+    #Given two sets of ranges (one for both x and y axes),
+    #uses self.calculateRange on both and returns the result
+    #as a 2-tuple of 2-tuples ((xStart, xEnd), (yStart, yEnd))
+    #Raises a ValueError if either range has an end that
+    #is not greater than that range's start
+    def calculateDimensionRanges(self, 
+        xStart: int or float,
+        xEnd: int or float,
+        yStart: int or float,
+        yEnd: int or float
+        ) -> Tuple[Tuple[float, float], Tuple[float, float]]:
+
+        #calculate x axis
+        xRange = self.calculateRange(xStart, xEnd, True)
+        #calculate y axis
+        yRange = self.calculateRange(yStart, yEnd, False)
+        
+        return (xRange, yRange)
+
 
 if __name__ == "__main__":
-    n = ProportionalBB(0.0, 1.0, 0.0, 1.0)
-    print(n)
-#    n.xEnd = 0.5
-#    print(n)
+    print("This is a class definition used as part of a larger script")
+    print("Did you mean to run py_traffic_light.py?")
   
