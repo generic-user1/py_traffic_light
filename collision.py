@@ -199,8 +199,19 @@ class Collision():
             errMsg = f"Attempted to run <{self}>.getCollisionOrigin but there was no collision area!"
             raise ValueError(errMsg)
         
-    
 
+    #Returns True if this Collision has 
+    #active bindings, False if it does not.
+    #if hasAny is True (default), returns True if any bindings are active
+    #if hasAny is False, only returns True if all bindings are active
+    def hasBindings(self, hasAny: bool = True):
+        
+        if hasAny:
+            return (self._collisionSourceFuncId != None or self._collidedWithFuncId != None)
+        else:
+            return (self._collisionSourceFuncId != None and self._collidedWithFuncId != None)
+    
+    
     #returns a 2-tuple (width, height) of the
     #dimensions of the collision area. 
     #Raises a ValueError if there is no collision
