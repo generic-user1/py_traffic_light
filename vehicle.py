@@ -22,6 +22,32 @@ class Vehicle(Collider, Canvas):
     #as an integer number of pixels
     DEFAULT_MOVEMENT_DISTANCE = 1
 
+    #override constructor
+    def __init__(self, parent, movementDelay: int = None, movementDistance: int = None):
+        #set defaults in superclass constructor
+        super().__init__(
+            parent,
+            width=self.DEFAULT_WIDTH,
+            height=self.DEFAULT_HEIGHT,
+            bg=self.DEFAULT_COLOR
+            )
+
+        #init animation control variables
+        self.movementDelay = movementDelay 
+        self.movementDistance = movementDistance
+        self.lastFrameTime = None
+
+        #set defaults if no value was provided for either control var
+        if movementDelay == None:
+             self.movementDelay = self.DEFAULT_MOVEMENT_DELAY
+        if movementDistance == None:
+             self.movementDistance = self.DEFAULT_MOVEMENT_DISTANCE
+
+        #init _destination to None
+        #this will be set to a 2-tuple (x, y)
+        #when animating movement from point to point
+        #being set to None indicates no active movement
+        self._destination = None
 
     #draws vehicle
     def drawVehicle(self):
@@ -155,32 +181,6 @@ class Vehicle(Collider, Canvas):
         #(deviation from expected delay) can be calculated
         self.lastFrameTime = datetime.now()
 
-    #override constructor
-    def __init__(self, parent, movementDelay: int = None, movementDistance: int = None):
-        #set defaults in superclass constructor
-        super().__init__(
-            parent,
-            width=self.DEFAULT_WIDTH,
-            height=self.DEFAULT_HEIGHT,
-            bg=self.DEFAULT_COLOR
-            )
-
-        #init animation control variables
-        self.movementDelay = movementDelay 
-        self.movementDistance = movementDistance
-        self.lastFrameTime = None
-
-        #set defaults if no value was provided for either control var
-        if movementDelay == None:
-             self.movementDelay = self.DEFAULT_MOVEMENT_DELAY
-        if movementDistance == None:
-             self.movementDistance = self.DEFAULT_MOVEMENT_DISTANCE
-
-        #init _destination to None
-        #this will be set to a 2-tuple (x, y)
-        #when animating movement from point to point
-        #being set to None indicates no active movement
-        self._destination = None
 
     #drive in a specified cardinal direction
     #by a specified distance (in pixels)
