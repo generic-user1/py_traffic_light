@@ -4,9 +4,8 @@ from __future__ import annotations
 from collision import Collision
 from typing import TYPE_CHECKING, Tuple
 
-from proportional_bb import ProportionalBB
 if TYPE_CHECKING:
-    from collider import Collider
+    from partial_collider import PartialCollider
 
 
 #PartialCollision
@@ -24,42 +23,24 @@ class PartialCollision(Collision):
     
 
     #override constructor
-    def __init__(self, collisionSource: Collider, collidedWith: Collider):
-
+    def __init__(self, collisionSource: PartialCollider, collidedWith: PartialCollider):
         #run superclass constructor
         super().__init__(collisionSource, collidedWith)
 
-        #init the active area bound vars
-        #each Collider needs a ProportionalBB
-        #to store the bounding box of its active area
-        self.collisionSourceActiveArea = ProportionalBB(
-            self.DEFAULT_ACTIVE_START,
-            self.DEFAULT_ACTIVE_END,
-            self.DEFAULT_ACTIVE_START,
-            self.DEFAULT_ACTIVE_END
-            )
+        #apply new type hints
+        self.collisionSource:PartialCollider
+        self.collidedWith:PartialCollider
 
-        self.collidedWithActiveArea = ProportionalBB(
-            self.DEFAULT_ACTIVE_START,
-            self.DEFAULT_ACTIVE_END,
-            self.DEFAULT_ACTIVE_START,
-            self.DEFAULT_ACTIVE_END
-            )
 
     #override collision area calculation
     #to only include active areas for each Collider
     def getCollisionArea(self) -> Tuple[int, int, int, int]:
         #get the ranges that both objects cover
-        srcRanges = self.collisionSource.getDimensionRanges()
-        objRanges = self.collidedWith.getDimensionRanges()
-
-        #use the ProportionalBB of each Collider to get the
-        #active area for collision
-        srcActiveRanges = self.collisionSourceActiveArea.calculateDimensionRanges(*srcRanges[0], *srcRanges[1])
-        objActiveRanges = self.collidedWithActiveArea.calculateDimensionRanges(*objRanges[0], *objRanges[1])
+        srcRanges = self.collisionSource.getActiveAreaRanges()
+        objRanges = self.collidedWith.getActiveAreaRanges()
 
         #calculate the area of overlap between these ranges
-        collisionArea = self.getRectangleOverlap(srcActiveRanges, objActiveRanges)
+        collisionArea = self.getRectangleOverlap(srcRanges, objRanges)
 
         #return the result of the collision
         #this will be None if no collision was found
