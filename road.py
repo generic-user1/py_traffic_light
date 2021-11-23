@@ -37,6 +37,46 @@ class Road(Collider, Canvas):
     #drawRoad is called without specifying a line type
     DEFAULT_LINE_TYPE = TrafficLineType.SOLID
 
+    def __init__(self, parent, horizontal=False):
+        from tkinter.constants import FLAT
+
+        #run superclass constructor
+        super().__init__(
+            parent, #set parent object
+            width=100, #set default width and height
+            height=100, 
+            bg=self.ROAD_COLOR, #set background color
+            highlightthickness=0 #remove border that is applied by default to canvas widgets
+            )
+
+        #save rotation setting
+        self.horizontal = horizontal
+
+        #init line type to the default
+        self._lineType = self.DEFAULT_LINE_TYPE
+
+        #get dimensions
+        #these will be updated dynamically at runtime
+        #using the <Configure> event and onResize method
+        self.currentWidth = self.winfo_width()
+        self.currentHeight = self.winfo_height()
+        
+        #bind the _onResize method to the <Configure> event
+        self.bind("<Configure>", self._onResize)
+
+        #check for Collisions with other roads
+        #store these Collisions in a list, then enable binding on each
+        self.roadCollisions: List[Collision] = []
+        for roadCollision in self._getRoadCollisions():
+            roadCollision.addBindings()
+            self.roadCollisions.append(roadCollision)
+        #because each of the Collisions is bound, it will update to reflect
+        #the new area of collision
+
+        #bind the drawIntersectionBoxes method to the <<CollisionUpdate>> event
+        #this will draw intersections over top of existing traffic lines
+        self.bind("<<CollisionUpdate>>", self.drawIntersectionBoxes)
+
     #given a TrafficLineType or a matching string,
     #returns a valid TrafficLineType
     #if the provided value is not a TrafficLineType or 
@@ -259,45 +299,6 @@ class Road(Collider, Canvas):
             self._updateSize(event.width, event.height)
 
 
-    def __init__(self, parent, horizontal=False):
-        from tkinter.constants import FLAT
-
-        #run superclass constructor
-        super().__init__(
-            parent, #set parent object
-            width=100, #set default width and height
-            height=100, 
-            bg=self.ROAD_COLOR, #set background color
-            highlightthickness=0 #remove border that is applied by default to canvas widgets
-            )
-
-        #save rotation setting
-        self.horizontal = horizontal
-
-        #init line type to the default
-        self._lineType = self.DEFAULT_LINE_TYPE
-
-        #get dimensions
-        #these will be updated dynamically at runtime
-        #using the <Configure> event and onResize method
-        self.currentWidth = self.winfo_width()
-        self.currentHeight = self.winfo_height()
-        
-        #bind the _onResize method to the <Configure> event
-        self.bind("<Configure>", self._onResize)
-
-        #check for Collisions with other roads
-        #store these Collisions in a list, then enable binding on each
-        self.roadCollisions: List[Collision] = []
-        for roadCollision in self._getRoadCollisions():
-            roadCollision.addBindings()
-            self.roadCollisions.append(roadCollision)
-        #because each of the Collisions is bound, it will update to reflect
-        #the new area of collision
-
-        #bind the drawIntersectionBoxes method to the <<CollisionUpdate>> event
-        #this will draw intersections over top of existing traffic lines
-        self.bind("<<CollisionUpdate>>", self.drawIntersectionBoxes)
         
 
     #draw a blank rectangle over all areas of this road
@@ -352,7 +353,7 @@ class Road(Collider, Canvas):
         #test collision on these sibling roads and return the results
         roadCollisions = self.getCollisions(siblingRoads)
 
-        return roadCollisions   
+        return roadCollisions
 
 
 #end Road
