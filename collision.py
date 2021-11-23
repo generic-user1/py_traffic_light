@@ -139,7 +139,7 @@ class Collision():
                 raise ValueError("Cannot add bindings because bindings already exist!")
                 
 
-        self._collisionSourceFuncId = self.collisionSource.bind("<Configure>", self.relayCollisionUpdateEvent, add=True),
+        self._collisionSourceFuncId = self.collisionSource.bind("<Configure>", self.relayCollisionUpdateEvent, add=True)
         self._collidedWithFuncId = self.collidedWith.bind("<Configure>", self.relayCollisionUpdateEvent, add=True)
 
 
