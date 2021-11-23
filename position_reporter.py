@@ -8,12 +8,31 @@ from tkinter import Misc as BaseTkObject
 # in tkinter called BaseWidget already; as it happens that class
 # already inherits )
 
-#Position Reporter
-#An "interface" (implemented as a mixin) for widgets to report their current position
-#I say "interface" but the definition is concrete; I simply intend for
-#this class to be used in addition to a more useful base class
+#Position Reporter Interface
+#An "interface" (implemented as an abstract class) 
+#for rectangular things to report their current position and dimensions
+#Descriptions of the expected behavior of each method can be found
+#in the concrete PositionReporter definition
+class PositionReporterInterface:
 
-class PositionReporter(BaseTkObject):
+    _ERROR_MESSAGE_TEXT = "PositionReporterInterface is abstract and does not provide concrete method definitions"
+
+    def getPos(self) -> Tuple[int, int]:
+        raise NotImplementedError(PositionReporterInterface._ERROR_MESSAGE_TEXT)
+
+    def getDimensions(self) -> Tuple[int, int]:
+        raise NotImplementedError(PositionReporterInterface._ERROR_MESSAGE_TEXT)
+
+    def getCorners(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+        raise NotImplementedError(PositionReporterInterface._ERROR_MESSAGE_TEXT)
+
+
+#Position Reporter
+#A "concrete interface" (implemented as a mixin) for widgets to report their current position
+#When I say "concrete interface", I mean that this class is to be used 
+#in addition to a more useful base class (there may be a more proper word for this)
+
+class PositionReporter(PositionReporterInterface, BaseTkObject):
 
     #override constructor to make PositionReporter a mixin class
     #*args and **kwargs capture any and all arguments passed to the
@@ -93,7 +112,7 @@ class PositionReporter(BaseTkObject):
     #overridable instancemethod version of getDimensionsOfWidget
     #see description of getPosOfWidget for a more detailed example
     #of this staticmethod + instancemethod pairing concept
-    def getDimensions(self):
+    def getDimensions(self) -> Tuple[int, int]:
         return self.getDimensionsOfWidget(self, forceStatic=True)
 
     #return the x and y coordinates of the top left
@@ -126,3 +145,47 @@ class PositionReporter(BaseTkObject):
     #and bottom right corners of this widget
     def getCorners(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
         return self.getCornersOfWidget(self)
+
+#Rectangle
+#A class that stores an origin and dimensions
+#and exposes them using the PositionReporterInterface
+class Rectangle(PositionReporterInterface):
+
+    def __init__(self,
+        originX: int or float,
+        originY: int or float,
+        width: int or float,
+        height: int or float
+        ):
+
+        self.originX = originX
+        self.originY = originY
+        self.width = width
+        self.height = height
+
+    #return the origin coordinates
+    def getPos(self) -> Tuple[int, int]:
+        return (self.originX, self.originY)
+
+    #return the dimensions
+    def getDimensions(self) -> Tuple[int, int]:
+        return (self.width, self.height)
+
+    #return two 2-tuples representing the coordinates
+    #of the top left and bottom right corners of this rectangle
+    def getCorners(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+        
+        #top left corner is just the origin coordinates
+        cornerTL = (self.originX, self.originY)
+
+        #bottom right corner is origin coordinates
+        #offset by the width and height
+        cornerBR = (self.originX + self.width, self.originY + self.height)
+
+        return (cornerTL, cornerBR)
+
+    def __str__(self):
+        return f"({repr(self.originX)}, {repr(self.originY)}, {repr(self.width)}, {repr(self.height)})"
+
+    def __repr__(self):
+        return "Rectangle"+self.__str__()

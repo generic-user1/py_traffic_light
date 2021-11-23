@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Tuple, TYPE_CHECKING
 if TYPE_CHECKING:
-    from collider import Collider
+    from collider import ColliderInterface
 
 
 #Collision
@@ -107,16 +107,16 @@ class Collision():
     #raises a <<CollisionUpdate>> event on both Colliders
     def relayCollisionUpdateEvent(self, event = None):
 
-        self.collisionSource._collisionUpdateEvent()
-        self.collidedWith._collisionUpdateEvent()
+        self.collisionSource.createCollisionUpdateEvent()
+        self.collidedWith.createCollisionUpdateEvent()
 
     #constructor requires two Collider objects; these are the objects involved
     #with this specific Collision instance
-    def __init__(self, collisionSource: Collider, collidedWith: Collider):
+    def __init__(self, collisionSource: ColliderInterface, collidedWith: ColliderInterface):
 
         #init collider storage vars
-        self.collisionSource: Collider = collisionSource
-        self.collidedWith: Collider = collidedWith
+        self.collisionSource: ColliderInterface = collisionSource
+        self.collidedWith: ColliderInterface = collidedWith
 
         #init vars for funcids (from bindings)
         #these are needed to unbind later
