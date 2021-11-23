@@ -1,24 +1,52 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-from position_reporter import PositionReporter
+from position_reporter import PositionReporterInterface, PositionReporter
 from typing import Iterable, List, Tuple
 from collision import Collision
 
+#Collider Interface
+#A subinterface of PositionReporter that can
+#detect collisions between itself and other objects
+#that implement the Collider Interface
+#Descriptions of the expected behavior of each method can be found
+#in the concrete PositionReporter definition
+class ColliderInterface(PositionReporterInterface):
+
+    _ERROR_MESSAGE_TEXT = "ColliderInterface is abstract and does not provide concrete method definitions"
+
+    def getCollisionWith(self, otherObj: ColliderInterface) -> Collision:
+        raise NotImplementedError(ColliderInterface._ERROR_MESSAGE_TEXT)
+
+    def getDimensionRanges(self) -> Tuple[Tuple[int, int], Tuple[int, int]]:
+        raise NotImplementedError(ColliderInterface._ERROR_MESSAGE_TEXT)
+
+    def getCollisions(self, objectsToCheck: Iterable[ColliderInterface] = None) -> List[Collision]:
+        raise NotImplementedError(ColliderInterface._ERROR_MESSAGE_TEXT)
+
+    def getCollidingObjects(self, objectsToCheck: Iterable[ColliderInterface] = None) -> List[ColliderInterface]:
+        raise NotImplementedError(ColliderInterface._ERROR_MESSAGE_TEXT)
+
+    def generateCollisions(self, colliders: Iterable[ColliderInterface]) -> List[Collision]:
+        raise NotImplementedError(ColliderInterface._ERROR_MESSAGE_TEXT)
+
+    def createCollisionUpdateEvent(self) -> None:
+        raise NotImplementedError(ColliderInterface._ERROR_MESSAGE_TEXT)
+
 #Collider
-#a sub"interface" of PositionReporter that can detect 
+#a sub"concrete interface" of PositionReporter that can detect 
 #collisions between itself and other Collider instances
 
-class Collider(PositionReporter):
+class Collider(ColliderInterface, PositionReporter):
 
     #creates a new Collision object involving this Collider
     #and another provided Collider object
     #raises TypeError if the other object is not a Collider 
-    def getCollisionWith(self, otherObj: Collider) -> Collision:
-        if isinstance(otherObj, Collider):
+    def getCollisionWith(self, otherObj: ColliderInterface) -> Collision:
+        if isinstance(otherObj, ColliderInterface):
             return Collision(self, otherObj)
         else:
-            raise TypeError(f"{otherObj} is not a Collider")
+            raise TypeError(f"{otherObj} does not implement ColliderInterface")
 
 
     #returns two ranges as 2-tuples (start, stop)
@@ -42,7 +70,7 @@ class Collider(PositionReporter):
     #   but you will need to call the addBindings method to activate this
     #   The generateCollisions method may be a better option if
     #   you want all Collisions to have active bindings from the start
-    def getCollisions(self, objectsToCheck: Iterable[Collider] = None) -> List[Collision]:
+    def getCollisions(self, objectsToCheck: Iterable[ColliderInterface] = None) -> List[Collision]:
 
         #if no object list was provided, use siblings of this object
         if objectsToCheck == None:
@@ -56,9 +84,9 @@ class Collider(PositionReporter):
         #object from the list, if present
         for obj in filter(lambda x: x != self, objectsToCheck):
 
-            #if object is not a Collider, then skip collision
-            #check and continue to the next object
-            if not isinstance(obj, Collider):
+            #if object doesn't implement ColliderInterface, then skip 
+            #collision check and continue to the next object
+            if not isinstance(obj, ColliderInterface):
                 continue
             #note: given that PositionReporter has static methods
             #that should work for any rectangular object, only checking against
@@ -85,7 +113,7 @@ class Collider(PositionReporter):
     #the widgets that this object collides with; 
     #no data on the position or size of the collision is included.
     #objectsToCheck works the same as in getCollisions
-    def getCollidingObjects(self, objectsToCheck: Iterable[Collider] = None) -> List[Collider]:
+    def getCollidingObjects(self, objectsToCheck: Iterable[ColliderInterface] = None) -> List[ColliderInterface]:
         
         #get collisions along with unneeded data
         collisions = self.getCollisions(objectsToCheck)
@@ -104,7 +132,7 @@ class Collider(PositionReporter):
     #in that it does not check whether the collision is currently active
     #or not, and that the Collisions returned by this method have already had 
     #their addBindings method called so they can update their sizes
-    def generateCollisions(self, colliders: Iterable[Collider]) -> List[Collision]:
+    def generateCollisions(self, colliders: Iterable[ColliderInterface]) -> List[Collision]:
 
         collisions = []
         for obj in colliders:
@@ -114,11 +142,10 @@ class Collider(PositionReporter):
 
         return collisions
 
-    #internal method
     #raises a custom type of event on this Collider
     #this is called by bound Collisions that 
     #this Collider is involved in when the overlapping area changes
-    def _collisionUpdateEvent(self):
+    def createCollisionUpdateEvent(self):
         self.event_generate("<<CollisionUpdate>>", when="tail")
 
 #end Collider

@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Tuple
 
 from proportional_bb import ProportionalBB
 if TYPE_CHECKING:
-    from collider import Collider
+    from collider import ColliderInterface
 
 
 #PartialCollision
@@ -24,7 +24,7 @@ class PartialCollision(Collision):
     
 
     #override constructor
-    def __init__(self, collisionSource: Collider, collidedWith: Collider):
+    def __init__(self, collisionSource: ColliderInterface, collidedWith: ColliderInterface):
 
         #run superclass constructor
         super().__init__(collisionSource, collidedWith)
