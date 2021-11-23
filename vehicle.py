@@ -2,6 +2,10 @@
 
 from tkinter import Canvas
 from collider import Collider
+from collision import Collision
+from partial_collision import PartialCollision
+from proportional_bb import ProportionalBB
+from road import Road
 
 
 #a widget to represent a vehicle; can "drive"
@@ -48,6 +52,74 @@ class Vehicle(Collider, Canvas):
         #when animating movement from point to point
         #being set to None indicates no active movement
         self._destination = None
+
+        #init _roadCollision to None
+        #this will be set to a Collision involving
+        #this Vehicle and a Road object
+        self._roadCollision: Collision = None
+
+        #bind roadCollisionUpdate method to the <<CollisionUpdate>> event
+        self.bind("<<CollisionUpdate>>", self.roadCollisionUpdate)
+
+
+    def hasRoadCollision(self):
+        return self._roadCollision != None
+
+    def getRoadCollision(self):
+        return self._roadCollision
+
+    def _removeRoadCollision(self):
+        if self._roadCollision.hasBindings():
+            self._roadCollision.removeBindings()
+        self._roadCollision = None
+
+    #searches for collisions with Roads
+    #sets self._currentRoadCollision if one is found
+    #and there isn't already a _currentRoadCollision
+    #returns True if a collision was set, False if none was found
+    #raises ValueError if _currentRoadCollision is already set
+    def searchForRoadCollision(self):
+        
+        if self.hasRoadCollision():
+            raise ValueError("Cannot search for road collision because one is already set")
+
+        #get a set of sibling roads
+        roadSiblings = filter(lambda x: isinstance(x, Road), self.master.winfo_children())
+
+        #get a set of Collisions with those roads
+        roadCollisions = self.getCollisions(roadSiblings)
+
+        if len(roadCollisions) < 1:
+            #return False if no Collisions were found
+            return False
+        else:
+            self._roadCollision = roadCollisions[0]
+            self._roadCollision.addBindings()
+            return True
+
+    #runs when a <<CollisionUpdate>> event fires 
+    #due to the current road collision
+    #raises ValueError if _currentRoadCollision is unset
+    def roadCollisionUpdate(self, event = None):
+        
+        if not self.hasRoadCollision():
+            raise ValueError("Cannot update road collision because no road collision exists")
+
+        #unset the current road collision if the collision area doesn't exist
+        if not self._roadCollision.hasCollisionArea():
+            self._removeRoadCollision()
+        else:
+            halfRoadCollision = PartialCollision.fromCollision(self._roadCollision, False)
+            halfRoadCollision.collidedWithActiveArea = ProportionalBB(0.5, 1.0, 0.0, 1.0)
+
+            area = halfRoadCollision.getCollisionArea()
+            if area != None:
+                print("Half Road Collision Area:", area)
+                print("Aborting drive due to arriving at intersection!")
+                self.abortDrive()
+
+
+
 
     #draws vehicle
     def drawVehicle(self):
@@ -109,12 +181,17 @@ class Vehicle(Collider, Canvas):
 
         #check for missing destination        
         if self._destination == None:
-            print("anim step missing destination")
-            #if destination is missing, return now
-            return
+            #if destination is missing, raise a DriveComplete event
+            #and end without moving or scheduling _animStep again
+            self.event_generate("<<DriveComplete>>", when="tail")
+            return None
         #if destination isn't missing, break it out into x and y
         else:
             destX, destY = self._destination
+
+        #check for road collisions if one isn't already set
+        if not self.hasRoadCollision():
+            self.searchForRoadCollision()
 
         #get current position
         currentX, currentY = self.getPos()
