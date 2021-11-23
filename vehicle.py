@@ -110,7 +110,14 @@ class Vehicle(Collider, Canvas):
             self._removeRoadCollision()
         else:
             halfRoadCollision = PartialCollision.fromCollision(self._roadCollision, False)
-            halfRoadCollision.collidedWithActiveArea = ProportionalBB(0.5, 1.0, 0.0, 1.0)
+            
+            relevantRoad: Road = halfRoadCollision.collidedWith
+
+            intersectionArea = relevantRoad.getIntersectionAreas()[0]
+            intersectionBB = ProportionalBB.fromAbsoluteBounds(relevantRoad, intersectionArea)
+
+            
+            halfRoadCollision.collidedWithActiveArea = intersectionBB
 
             area = halfRoadCollision.getCollisionArea()
             if area != None:

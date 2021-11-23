@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from typing import ClassVar, Tuple, Dict, Any
 from dataclasses import dataclass
+from position_reporter import PositionReporterInterface, Rectangle
 
 #ProportionalBB (Short for Proportional Bounding Box)
 #A data class used to store a bounding box that is defined
@@ -241,6 +242,10 @@ class ProportionalBB:
         
         return (xRange, yRange)
 
+    #returns a shallow copy of this object
+    def getCopy(self) -> ProportionalBB:
+        from dataclasses import replace
+        return replace(self)
 
     #staticmethod
     #given a desired value within a range defined by
@@ -274,11 +279,45 @@ class ProportionalBB:
         rangeSize = rangeEnd - rangeStart
         return (desiredValue - rangeStart) / rangeSize
 
+    #staticmethod
+    #given an object that implements PositionReporterInterface
+    #and a Rectangle representing an area within that object,
+    #returns a ProportionalBB that represents the internal rectangle
+    #relative to the provided PositionReporterInterface implementor
+    #Raises ValueError if internal rectangle isn't fully encompassed by relativeTo
+    def fromAbsoluteBounds(
+        relativeTo: PositionReporterInterface,
+        innerRectangle: Rectangle
+        ) -> ProportionalBB:
 
-    #returns a shallow copy of this object
-    def getCopy(self) -> ProportionalBB:
-        from dataclasses import replace
-        return replace(self)
+        #get the corners of the outer rectangle
+        outerCornerTL, outerCornerBR = relativeTo.getCorners()
+        #break these corners into individual coordinates
+        outerX0 = outerCornerTL[0]
+        outerX1 = outerCornerBR[0]
+        outerY0 = outerCornerTL[1]
+        outerY1 = outerCornerBR[1]
+
+        #do the same for the inner rectangle
+        innerCornerTL, innerCornerBR = innerRectangle.getCorners()
+        innerX0 = innerCornerTL[0]
+        innerX1 = innerCornerBR[0]
+        innerY0 = innerCornerTL[1]
+        innerY1 = innerCornerBR[1]
+
+        #calculate the bounds of the inner rectangle
+        #if any ValueErrors are thrown, use a custom message
+        try:
+            xStart = ProportionalBB.calculateProportion(outerX0, outerX1, innerX0)
+            xEnd = ProportionalBB.calculateProportion(outerX0, outerX1, innerX1)
+            yStart = ProportionalBB.calculateProportion(outerY0, outerY1, innerY0)
+            yEnd = ProportionalBB.calculateProportion(outerY0, outerY1, innerY1)
+        except ValueError:
+            errMsg = f"Inner rectangle not within outer rectangle"
+            raise ValueError(errMsg)
+        
+        #create a ProportionalBB using these bounds and return it
+        return ProportionalBB(xStart, xEnd, yStart, yEnd)
 
 if __name__ == "__main__":
     print("This is a class definition used as part of a larger script")

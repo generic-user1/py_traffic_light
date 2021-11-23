@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from tkinter import Canvas
+from position_reporter import Rectangle
 from collider import Collider
 from collision import Collision
 from typing import Iterable, List, Tuple
@@ -355,6 +356,28 @@ class Road(Collider, Canvas):
 
         return roadCollisions
 
+
+    #Returns a List containing Rectangles;
+    #One for each Road that this Road intersects
+    def getIntersectionAreas(self) -> List[Rectangle]:
+
+        #init output list
+        intersectionAreas = []
+        
+        #iterate through Collisions with other roads
+        for roadCollision in self.roadCollisions:
+            #get the area of each Collision
+            collisionArea = roadCollision.getCollisionArea()
+            if collisionArea != None:
+                #if the area exists, create a Rectangle
+                #and append that to the list
+                intersectionAreas.append(Rectangle(*collisionArea))
+            else:
+                #if the area doesn't exist, continue to the next Collision
+                continue
+
+        #return the now filled list of intersection areas
+        return intersectionAreas
 
 #end Road
 
