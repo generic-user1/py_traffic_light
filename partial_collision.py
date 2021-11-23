@@ -64,7 +64,50 @@ class PartialCollision(Collision):
         #return the result of the collision
         #this will be None if no collision was found
         return collisionArea
-        
+
+  
+    #staticmethod
+    #Given a Collision, returns a PartialCollision
+    #If the provided Collision is already a PartialCollision, return it unchanged
+    #If transferBinding is True and the provided Collision
+    #is bound, it will be unbound and the returned PartialCollision
+    #will be bound instead. If transferBinding is False (default),
+    #the provided Collision is unchanged and the new PartialCollision
+    #will always be unbound until you manually call its addBindings method
+    #Raises TypeError if provided value is not a Collision
+    @staticmethod
+    def fromCollision(
+        targetCollision: Collision, 
+        transferBinding: bool = False
+        ) -> PartialCollision:
+
+        if isinstance(targetCollision, PartialCollision):
+            #if targetCollision is already a PartialCollision,
+            #return it without any modification
+            return targetCollision
+        elif isinstance(targetCollision, Collision):
+            #if targetCollision is a Collision but not a
+            #PartialCollision, create a new PartialCollision from it
+            src = targetCollision.collisionSource
+            obj = targetCollision.collidedWith
+            newCollision = PartialCollision(src, obj)
+            
+            #if transferBinding is true, check whether the target collision is bound
+            if transferBinding and targetCollision.hasBindings(hasAny=True):
+                #If transferBinding is true and the collision is bound,
+                #unbind the old collision and then bind the new collision
+                targetCollision.removeBindings()
+                newCollision.addBindings()
+
+            #return the new PartialCollision
+            return newCollision
+
+        else:
+            #raise TypeError if targetCollision is not a Collision
+            errMsg = f"{targetCollision} is not a Collision!"
+            raise TypeError(errMsg) 
+
+
 if __name__ == "__main__":
     print("This is a class definition used as part of a larger script")
     print("Did you mean to run py_traffic_light.py?")
