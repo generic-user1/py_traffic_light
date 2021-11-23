@@ -86,9 +86,10 @@ class ProportionalBB:
 
     #returns a list of all configured bound names
     #as provided by AXIS_BOUNDS
-    def getBoundNames(self):
+    @classmethod
+    def getBoundNames(cls):
         boundNames = []
-        boundNameSets = self.AXIS_BOUNDS.values()
+        boundNameSets = cls.AXIS_BOUNDS.values()
         for nameSet in boundNameSets:
             boundNames += nameSet
         return boundNames
@@ -240,6 +241,44 @@ class ProportionalBB:
         
         return (xRange, yRange)
 
+
+    #staticmethod
+    #given a desired value within a range defined by
+    #rangeStart and rangeEnd, returns the proportion of that range
+    #That is, translates a pixel index within a range to a proportion of that range
+    #that the desired value is - so if you have x0 and x1 (or y0 and y1)
+    #for an object as well as a desired pixel position between those points,
+    #you can use this function to find what to set one of a ProportionalBB's
+    #bounds such that the bound lies exactly at the desired position
+    #always returns a float between 0 and 1
+    #raises a ValueError if range is invalid or desired value not within it
+    @staticmethod
+    def calculateProportion(
+        rangeStart: int or float,
+        rangeEnd: int or float,
+        desiredValue: int or float
+        ) -> float:
+        
+        #raise ValueError if range is not greater than zero
+        if rangeEnd < rangeStart:
+            errMsg = f"Range end ({rangeEnd}) was not greater than rangeStart ({rangeStart})"
+            raise ValueError(errMsg)
+
+        #raise ValueError if desired value is not in range
+        if desiredValue < rangeStart or desiredValue > rangeEnd:
+            errMsg = f"Value {desiredValue} not found in range {rangeStart} to {rangeEnd}"
+            raise ValueError(errMsg)
+
+        #calculate the desired value as a proportion of 
+        #the overall range size
+        rangeSize = rangeEnd - rangeStart
+        return (desiredValue - rangeStart) / rangeSize
+
+
+    #returns a shallow copy of this object
+    def getCopy(self) -> ProportionalBB:
+        from dataclasses import replace
+        return replace(self)
 
 if __name__ == "__main__":
     print("This is a class definition used as part of a larger script")

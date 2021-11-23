@@ -11,10 +11,15 @@ from collision import Collision
 
 class Collider(PositionReporter):
 
-    #make PositionReporter a mixin
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        print(f"{self}.ColliderInit")
+    #creates a new Collision object involving this Collider
+    #and another provided Collider object
+    #raises TypeError if the other object is not a Collider 
+    def getCollisionWith(self, otherObj: Collider) -> Collision:
+        if isinstance(otherObj, Collider):
+            return Collision(self, otherObj)
+        else:
+            raise TypeError(f"{otherObj} is not a Collider")
+
 
     #returns two ranges as 2-tuples (start, stop)
     #the first range is the x range of the object, the second is the y range
@@ -62,10 +67,10 @@ class Collider(PositionReporter):
             #interested in collisions with (such as the background)
 
             #create a Collision object for these two Colliders
-            newCollision = Collision(self, obj)
+            newCollision = self.getCollisionWith(obj)
 
             #if objects don't overlap, continue to next object
-            if not newCollision.hasCollisionArea() :
+            if not newCollision.hasCollisionArea():
                 continue
             else:
                 #if objects do overlap, record this collision
@@ -103,7 +108,7 @@ class Collider(PositionReporter):
 
         collisions = []
         for obj in colliders:
-            newCollision = Collision(self, obj)
+            newCollision = self.getCollisionWith(obj)
             newCollision.addBindings()
             collisions.append(newCollision)
 

@@ -29,7 +29,6 @@ class PositionReporter(BaseTkObject):
         #super().__init__ will point to that second class
         #this is because tkinter.Misc (aka BaseTkObject) has no __init__ method
         #(I beleive it was designed as an interface similar to this one)
-        print(f"{self}.PositionReporterInit")
 
     #return coordinates within parent
     #as a 2-tuple (x, y)
