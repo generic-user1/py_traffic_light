@@ -289,7 +289,7 @@ class Road(Collider, Canvas):
         #check for Collisions with other roads
         #store these Collisions in a list, then enable binding on each
         self.roadCollisions: List[Collision] = []
-        for roadCollision in self.getRoadCollisions():
+        for roadCollision in self._getRoadCollisions():
             roadCollision.addBindings()
             self.roadCollisions.append(roadCollision)
         #because each of the Collisions is bound, it will update to reflect
@@ -334,10 +334,11 @@ class Road(Collider, Canvas):
                 )    
 
 
+    #internal method
     #get a list of Collisions for each
     #Road that this Road intersects; these can be used
     #to draw intersections
-    def getRoadCollisions(self) -> List[Collision]:
+    def _getRoadCollisions(self) -> List[Collision]:
 
         #define a filter function that will return only 
         #Road objects that are not this one
